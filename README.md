@@ -58,7 +58,7 @@ The application uses a domain-driven clean architecture organized around resourc
 
 ```text
 src/
-├── config/                 # Application settings and configuration
+├── core/                   # Application settings and configuration
 ├── dependencies.py         # Shared dependency wiring
 ├── integrations/           # Adapters to databases and external services
 └── modules/                # Resource-oriented application modules
@@ -81,37 +81,39 @@ Keep resource business rules in services and persistence details in repositories
 
 ## API endpoints
 
+Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad request · **401** Unauthenticated · **403** Forbidden (admin only) · **404** Not found · **409** Conflict (duplicate file hash)
+
 **Auth**
 
-| Method | Path | Access | Purpose |
-|---|---|---|---|
-| POST | `/auth/signup` | Public | Create an account |
-| POST | `/auth/login` | Public | Get an auth token |
+| Method | Path | Access | Purpose | Status codes |
+|---|---|---|---|---|
+| POST | `/auth/signup` | Public | Create an account | 201 · 400 |
+| POST | `/auth/login` | Public | Get an auth token | 200 · 401 |
 
 **Users**
 
-| Method | Path | Access | Purpose |
-|---|---|---|---|
-| GET | `/users/me` | Authenticated | Current user profile |
-| PUT | `/users/me` | Authenticated | Update own profile |
-| GET | `/users/me/access-history` | Authenticated | Books the current user has opened — cursor-based pagination |
+| Method | Path | Access | Purpose | Status codes |
+|---|---|---|---|---|
+| GET | `/users/me` | Authenticated | Current user profile | 200 · 401 |
+| PUT | `/users/me` | Authenticated | Update own profile | 200 · 400 · 401 |
+| GET | `/users/me/access-history` | Authenticated | Books the current user has opened — cursor-based pagination | 200 · 400 · 401 |
 
 **Books**
 
-| Method | Path | Access | Purpose |
-|---|---|---|---|
-| POST | `/books` | Admin | Upload a book (PDF) |
-| GET | `/books` | Authenticated | List — search, department filter, cursor-based pagination |
-| GET | `/books/{id}` | Authenticated | One book |
-| PUT | `/books/{id}` | Admin | Update a book |
-| DELETE | `/books/{id}` | Admin | Delete a book |
-| POST | `/books/{id}/access` | Authenticated | Record that the user opened the book |
+| Method | Path | Access | Purpose | Status codes |
+|---|---|---|---|---|
+| POST | `/books` | Admin | Upload a book (PDF) | 201 · 400 · 401 · 403 · 409 |
+| GET | `/books` | Authenticated | List — search, department filter, cursor-based pagination | 200 · 400 · 401 |
+| GET | `/books/{id}` | Authenticated | One book | 200 · 401 · 404 |
+| PUT | `/books/{id}` | Admin | Update a book | 200 · 400 · 401 · 403 · 404 |
+| DELETE | `/books/{id}` | Admin | Delete a book | 204 · 401 · 403 · 404 |
+| POST | `/books/{id}/access` | Authenticated | Record that the user opened the book | 201 · 401 · 404 |
 
 **Departments**
 
-| Method | Path | Access | Purpose |
-|---|---|---|---|
-| GET | `/departments` | Authenticated | List departments (for filtering) |
+| Method | Path | Access | Purpose | Status codes |
+|---|---|---|---|---|
+| GET | `/departments` | Authenticated | List departments (for filtering) | 200 · 401 |
 
 ## Running and testing
 
