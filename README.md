@@ -117,9 +117,18 @@ Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad
 
 ## Running and testing
 
+Start the PostgreSQL development database with Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up -d db
+```
+
+The database is available on `localhost:5432` by default. Compose persists its data in the `postgres_data` volume; stop the service with `docker compose down`. To discard the database and its data, run `docker compose down -v`. The credentials in `.env.example` are for local development only. The API is not yet included as a Compose service.
+
 | Item | Detail |
 |---|---|
-| Services | Docker Compose: API + PostgreSQL |
+| Services | Docker Compose: PostgreSQL development database |
 | Config | `.env.example` holds dummy dev values; no real `.env` is committed |
 | Tests | Upload success, duplicate → 409, plus the 400 / 401 / 403 / 404 cases |
 | Test PDFs | Generated in a pytest fixture (proposed, not confirmed) |
