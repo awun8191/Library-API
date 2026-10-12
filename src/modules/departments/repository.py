@@ -1,0 +1,1 @@
+"""Department resource persistence contracts and queries."""

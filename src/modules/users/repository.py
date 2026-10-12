@@ -1,0 +1,1 @@
+"""User resource persistence contracts and queries."""

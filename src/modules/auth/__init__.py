@@ -1,0 +1,1 @@
+"""Authentication resource module."""

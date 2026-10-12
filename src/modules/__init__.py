@@ -1,0 +1,1 @@
+"""Resource-oriented application modules."""
