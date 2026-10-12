@@ -35,7 +35,7 @@ A minimal digital library for a school: admins upload course materials (PDFs), s
 
 ## Relationships
 
-![ERD — data models and relationships](Blank%20diagram.jpeg)
+![ERD — data models and relationships](./ERD.jpeg)
 
 | From → To | Cardinality | Notes |
 |---|---|---|
