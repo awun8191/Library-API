@@ -77,7 +77,7 @@ src/
     └── users/               # Same data/repository/service/router layout
 ```
 
-Keep resource business rules in services and persistence details in repositories. The `auth` module owns signup and login; authenticated-user resolution and authorization dependencies are shared through `dependencies.py`. Each `router.py` defines the resource's FastAPI routes; the application entrypoint (`main.py`) will include each resource router when the API is implemented. Integrations implement infrastructure-facing adapters; configuration and `dependencies.py` provide settings and wire implementations into the application. Resource services should depend on repository contracts rather than framework or database details, keeping the domain logic isolated and testable.
+Keep resource business rules in services and persistence details in repositories. The `auth` module owns signup and login; authenticated-user resolution and authorization dependencies are shared through `dependencies.py`. Each `router.py` defines the resource's FastAPI routes; the application entrypoint (`src/main.py`) will include each resource router when the API is implemented. Integrations implement infrastructure-facing adapters; configuration and `dependencies.py` provide settings and wire implementations into the application. Resource services should depend on repository contracts rather than framework or database details, keeping the domain logic isolated and testable.
 
 ## API endpoints
 
