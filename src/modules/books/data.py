@@ -38,12 +38,6 @@ class BookListResponse(BaseModel):
     has_more: bool = False
 
 
-"""Book-access history data models and schemas."""
-from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
-
-
 class BookAccessResponse(BaseModel):
     """Schema for book access record."""
     id: int

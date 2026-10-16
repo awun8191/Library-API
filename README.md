@@ -68,12 +68,11 @@ src/
     │   ├── repository.py    # Persistence interfaces and queries
     │   ├── router.py        # Signup and login routes
     │   └── service.py       # Authentication use cases
-    ├── book_access/
-    │   ├── data.py          # Data models and schemas
-    │   ├── repository.py    # Persistence interfaces and queries
-    │   ├── router.py        # FastAPI routes for this resource
-    │   └── service.py       # Business rules and use cases
-    ├── books/               # Same data/repository/service/router layout
+    ├── books/
+    │   ├── data.py          # Book and access history data models and schemas
+    │   ├── repository.py    # Book and access persistence interfaces and queries
+    │   ├── router.py        # Routes for book CRUD, access recording, and history
+    │   └── service.py       # Book and access business rules and use cases
     ├── departments/         # Same data/repository/service/router layout
     └── users/               # Same data/repository/service/router layout
 ```
