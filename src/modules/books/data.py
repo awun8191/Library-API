@@ -11,11 +11,8 @@ class BookResponse(BaseModel):
     course_name: str
     topic: str
     course_code: str
-    file_hash: str
-    file_url: str
-    file_path: str
-    uploaded_by: int
     department_id: int
+    file_url: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

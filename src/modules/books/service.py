@@ -93,12 +93,9 @@ class BookService:
         return updated
 
     def delete_book(self, book_id: int) -> None:
-        book = self.book_repo.read_book(book_id)
-        if not book:
+        file_path = self.book_repo.delete_book(book_id)
+        if not file_path:
             raise BookNotFoundException()
-
-        file_path = book.file_path
-        self.book_repo.delete_book(book_id)
         self.file_storage.delete_file(file_path)
 
     def list_books(

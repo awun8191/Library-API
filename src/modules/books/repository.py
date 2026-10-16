@@ -45,8 +45,8 @@ class BookRepository(Protocol):
         """Update an existing book record."""
         ...
 
-    def delete_book(self, book_id: int) -> bool:
-        """Delete a book record and return True if successful."""
+    def delete_book(self, book_id: int) -> Optional[str]:
+        """Delete a book record and return its file_path if found, or None."""
         ...
 
     def list_books(
@@ -145,15 +145,16 @@ class SqlAlchemyBookRepository(BookRepository):
         self.session.refresh(book)
         return BookResponse.model_validate(book)
 
-    def delete_book(self, book_id: int) -> bool:
+    def delete_book(self, book_id: int) -> Optional[str]:
         stmt = select(Book).where(Book.id == book_id)
         book = self.session.execute(stmt).scalar_one_or_none()
         if not book:
-            return False
+            return None
 
+        file_path = book.file_path
         self.session.delete(book)
         self.session.commit()
-        return True
+        return file_path
 
     def list_books(
         self,

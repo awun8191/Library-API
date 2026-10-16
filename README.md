@@ -139,11 +139,8 @@ curl -X POST http://localhost:8000/api/v1/books \
   "course_name": "Data Structures",
   "topic": "Sorting",
   "course_code": "CSC201",
-  "file_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-  "file_url": "/static/books/3f2a9c1e7b4d4e0f9a6b2c8d1e5f7a90.pdf",
-  "file_path": "Storage/3f2a9c1e7b4d4e0f9a6b2c8d1e5f7a90.pdf",
-  "uploaded_by": 1,
   "department_id": 1,
+  "file_url": "/static/books/3f2a9c1e7b4d4e0f9a6b2c8d1e5f7a90.pdf",
   "created_at": "2026-10-16T15:00:00Z",
   "updated_at": "2026-10-16T15:00:00Z"
 }
