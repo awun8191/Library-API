@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 from core.config import AppSettings
 from core.exceptions import register_exception_handler
+from integrations.database import get_db_manager
 from modules.auth.router import get_auth_router
 from modules.books.router import get_books_router
 from modules.departments.router import get_departments_router
@@ -12,6 +13,7 @@ from modules.users.router import get_users_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+    get_db_manager().close()
 
 
 def initialize_app(settings: AppSettings) -> FastAPI:

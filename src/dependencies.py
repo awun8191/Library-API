@@ -1,13 +1,21 @@
 """Application dependency wiring shared across resource modules."""
-from typing import Optional
+from typing import Generator, Optional
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
 from core.config import AppSettings, get_settings
 from core.exceptions import UserForbiddenException, UserNotAuthorizedException
+from integrations.database import get_db_manager
 from modules.users.data import UserResponse
 
 security = HTTPBearer(auto_error=False)
+
+
+def get_db() -> Generator[Session, None, None]:
+    """Dependency that provides a transactional database session per request."""
+    manager = get_db_manager()
+    yield from manager.get_session()
 
 
 async def get_current_user(
