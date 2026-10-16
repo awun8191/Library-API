@@ -1,6 +1,7 @@
 #  ------------------------    BASE EXCEPTION   --------------------------------
 from typing import Optional
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 
@@ -82,4 +83,25 @@ def register_exception_handler(app: FastAPI):
             content={"message": exc.message},
         )
 
+    @app.exception_handler(RequestValidationError)
+    async def handle_validation_error(request: Request, exc: RequestValidationError):
+        """Return 400 (not FastAPI's default 422) for invalid input, with field-level details."""
+        errors = [
+            {
+                "field": ".".join(str(part) for part in err.get("loc", []) if part not in ("body", "query", "path")),
+                "error": err.get("msg"),
+            }
+            for err in exc.errors()
+        ]
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Invalid request data", "errors": errors},
+        )
 
+    @app.exception_handler(Exception)
+    async def handle_unexpected_error(request: Request, exc: Exception):
+        """Never leak stack traces to clients."""
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error"},
+        )

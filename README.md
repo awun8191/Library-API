@@ -149,7 +149,7 @@ curl -X POST http://localhost:8000/api/v1/books \
 }
 ```
 
-Uploading the same file again → `409 Conflict` (duplicate `file_hash`). A non-PDF → `400`. An unknown `department_id` → `404`.
+Uploading the same file again → `409 Conflict` (duplicate `file_hash`). A non-PDF or missing field → `400`. An unknown `department_id` → `404`.
 
 **List / search books** — `GET /api/v1/books?q=algorithms&department_id=1&limit=10&cursor=0`
 
@@ -199,32 +199,79 @@ Pass the returned `next_cursor` as `cursor` to fetch the next page.
 
 **Error shape** — every handled error returns `{"message": "..."}` with the matching status code, e.g. `404` for a missing book.
 
-## Running and testing
+## Setup and run
+
+You need **Python 3.13+**, **[uv](https://docs.astral.sh/uv/)**, and **PostgreSQL**, either through Docker or installed on your machine.
+
+**1. Clone and install**
 
 ```bash
-cp .env.example .env          # fill in the dummy dev values
-docker compose up -d db       # PostgreSQL on localhost:5432
-uv sync                       # install dependencies
-uv run alembic upgrade head   # create tables + seed department 1 and admin user 1
-cd src && uv run uvicorn main:app --reload
+git clone https://github.com/awun8191/Library-API.git
+cd Library-API
+uv sync
+cp .env.example .env
 ```
 
-Open http://localhost:8000/docs to try every endpoint. `scripts/seed.py` re-seeds the dev department and admin if needed. Compose persists data in the `postgres_data` volume; `docker compose down -v` discards it. The credentials in `.env.example` are for local development only.
+**2. Connect PostgreSQL** (pick one)
+
+*Option A: Docker (easiest).* The values in `.env.example` already match the Compose database.
+
+```bash
+docker compose up -d db
+```
+
+*Option B: PostgreSQL already on your machine.* Create a user and database, then point `DATABASE_URL` in `.env` at them:
+
+```bash
+psql -U postgres -c "CREATE USER buildlab WITH PASSWORD 'buildlab_dev_password';"
+psql -U postgres -c "CREATE DATABASE buildlab OWNER buildlab;"
+```
+
+```env
+DATABASE_URL=postgresql+psycopg://buildlab:buildlab_dev_password@localhost:5432/buildlab
+```
+
+If you'd rather use an existing user or database, change the user, password, port or database name in that URL to match.
+
+**3. Create the tables and dummy data**
+
+```bash
+uv run alembic upgrade head      # tables + dev admin (id 1)
+uv run python scripts/seed.py    # 3 departments, a student, 3 dummy PDFs, reading history
+```
+
+**4. Run the API** (from the repo root, so `.env` is found)
+
+```bash
+uv run uvicorn main:app --app-dir src --reload
+```
+
+Open **http://localhost:8000/docs** to try every endpoint. For Week 1, send any bearer token (for example `Authorization: Bearer dev`). It resolves to the seeded admin.
+
+**Troubleshooting**
+- `connection refused`: PostgreSQL isn't running, or the port in `DATABASE_URL` is wrong.
+- `password authentication failed`: the user or password in `DATABASE_URL` doesn't match your database.
+- `database_url Field required`: there's no `.env` in the folder you ran the command from. Run from the repo root.
+
+**Notes**
+- Invalid input returns `400` with `{"message": "Invalid request data", "errors": [...]}`, and unexpected errors return `500` without a stack trace.
+- Uploaded PDFs are saved in `Storage/` (git-ignored) and served at `/static/books`.
+- `docker compose down -v` wipes the Docker database. Afterwards, rerun step 3.
 
 | Item | Detail |
 |---|---|
-| Services | Docker Compose: PostgreSQL development database (API runs locally with uvicorn) |
-| Migrations | Alembic: initial schema + dev seed (department 1, admin user 1) |
+| Migrations | Alembic: initial schema + dev admin seed |
+| Dummy data | `scripts/seed.py` is safe to run repeatedly |
 | Config | `.env.example` holds dummy dev values; no real `.env` is committed |
-| Tests | Planned for Week 3: upload success, duplicate → 409, plus the 400 / 401 / 403 / 404 cases |
-| Caching | None — no Redis |
+| Tests | Planned for Week 3 |
 
 ## Week 1 status
 
 | Area | Status |
 |---|---|
 | Problem definition, data models, ERD | Done |
-| Alembic migrations + dev seed | Done |
+| Alembic migrations + dummy seed data | Done |
+| Invalid input → 400, no stack traces | Done |
 | Books CRUD on PostgreSQL (upload, list, get, update, delete) | Done |
 | Search, department filter, cursor pagination | Done |
 | Duplicate file → 409, missing record → 404 | Done |
