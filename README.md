@@ -1,6 +1,7 @@
 # BuildLab Library — School Digital Library API
 
-A minimal digital library for a school: admins upload course materials (PDFs), students search, filter by department, and open them.
+## PROBLEM DEFINITION
+A digital library for a school where admins upload course materials (PDFs), students search, filter by department, course code and open them.
 
 | | |
 |---|---|

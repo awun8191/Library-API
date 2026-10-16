@@ -1,16 +1,24 @@
 #  ------------------------    BASE EXCEPTION   --------------------------------
+from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 
 class AppException(Exception):
 
-    message: str = ""
+    message: str = "An unexpected error occurred"
     status_code: int = 500
 
-    def __init__(self, message: str, status_code: int = 500):
-        self.message = message
-        self.status_code = status_code
+    def __init__(
+        self,
+        message: Optional[str] = None,
+        status_code: Optional[int] = None,
+    ):
+        if message is not None:
+            self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        super().__init__(self.message)
 
 # =======================   FILE EXCEPTIONS -----------------------------------------
 
