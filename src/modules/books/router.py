@@ -77,7 +77,6 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         responses={
             200: {"description": "Books fetched successfully"},
             400: {"description": "Bad request"},
-            401: {"description": "Unauthenticated"},
         },
     )
     async def list_books(
@@ -85,7 +84,6 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         department_id: Optional[int] = Query(default=None, description="Filter by department ID"),
         cursor: Optional[int] = Query(default=None, description="Cursor pagination offset/ID"),
         limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
-        current_user: UserResponse = Depends(get_current_user),
         service: BookService = Depends(get_book_service),
     ):
         """List books matching search criteria and department filters with cursor-based pagination."""
@@ -104,13 +102,11 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         summary="Get details of a single book",
         responses={
             200: {"description": "Book details fetched successfully"},
-            401: {"description": "Unauthenticated"},
             404: {"description": "Book not found"},
         },
     )
     async def get_book(
         id: int,
-        current_user: UserResponse = Depends(get_current_user),
         service: BookService = Depends(get_book_service),
     ):
         """Retrieve details of a single course material by ID."""

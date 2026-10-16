@@ -105,8 +105,8 @@ Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad
 | Method | Path | Access | Purpose | Status codes |
 |---|---|---|---|---|
 | POST | `/api/v1/books` | Admin | Upload a book (PDF, multipart form) | 201 · 400 · 401 · 403 · 404 · 409 |
-| GET | `/api/v1/books` | Authenticated | List — search, department filter, cursor-based pagination | 200 · 400 · 401 |
-| GET | `/api/v1/books/{id}` | Authenticated | One book | 200 · 401 · 404 |
+| GET | `/api/v1/books` | Public | List — search, department filter, cursor-based pagination | 200 · 400 |
+| GET | `/api/v1/books/{id}` | Public | One book | 200 · 404 |
 | PUT | `/api/v1/books/{id}` | Admin | Update a book | 200 · 400 · 401 · 403 · 404 |
 | DELETE | `/api/v1/books/{id}` | Admin | Delete a book | 204 · 401 · 403 · 404 |
 | POST | `/api/v1/books/{id}/access` | Authenticated | Record that the user opened the book | 201 · 401 · 404 |
@@ -115,7 +115,7 @@ Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad
 
 | Method | Path | Access | Purpose | Status codes |
 |---|---|---|---|---|
-| GET | `/api/v1/departments` | Authenticated | List departments (for filtering) | 200 · 401 |
+| GET | `/api/v1/departments` | Public | List departments (for filtering) | 200 |
 
 ## Request / response examples
 

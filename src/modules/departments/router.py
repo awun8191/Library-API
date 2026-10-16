@@ -4,11 +4,10 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from core.config import AppSettings
-from dependencies import get_current_user, get_db
+from dependencies import get_db
 from modules.departments.data import DepartmentResponse
 from modules.departments.repository import SqlAlchemyDepartmentRepository
 from modules.departments.service import DepartmentService
-from modules.users.data import UserResponse
 
 
 def get_departments_router(settings: AppSettings) -> APIRouter:
@@ -23,11 +22,9 @@ def get_departments_router(settings: AppSettings) -> APIRouter:
         summary="List departments",
         responses={
             200: {"description": "List of departments fetched successfully"},
-            401: {"description": "Unauthenticated"},
         },
     )
     async def list_departments(
-        current_user: UserResponse = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
         """List all departments available for filtering and categorizing course materials."""
