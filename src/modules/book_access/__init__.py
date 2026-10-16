@@ -1,1 +1,0 @@
-"""Book-access history resource module."""

@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from core.config import AppSettings
 from core.exceptions import register_exception_handler
 from modules.auth.router import get_auth_router
-from modules.book_access.router import get_book_access_router
 from modules.books.router import get_books_router
 from modules.departments.router import get_departments_router
 from modules.users.router import get_users_router
@@ -32,6 +31,5 @@ def initialize_app(settings: AppSettings) -> FastAPI:
     app.include_router(router=get_users_router(settings))
     app.include_router(router=get_books_router(settings))
     app.include_router(router=get_departments_router(settings))
-    app.include_router(router=get_book_access_router(settings))
 
     return app
