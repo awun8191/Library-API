@@ -1,10 +1,13 @@
 """Department resource API routes."""
 from typing import List
 from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
 from core.config import AppSettings
-from dependencies import get_current_user
+from dependencies import get_current_user, get_db
 from modules.departments.data import DepartmentResponse
+from modules.departments.repository import SqlAlchemyDepartmentRepository
+from modules.departments.service import DepartmentService
 from modules.users.data import UserResponse
 
 
@@ -25,12 +28,10 @@ def get_departments_router(settings: AppSettings) -> APIRouter:
     )
     async def list_departments(
         current_user: UserResponse = Depends(get_current_user),
+        db: Session = Depends(get_db),
     ):
         """List all departments available for filtering and categorizing course materials."""
-        # Stub list of departments
-        return [
-            DepartmentResponse(id=1, name="Computer Science"),
-            DepartmentResponse(id=2, name="Electrical Engineering"),
-        ]
+        service = DepartmentService(SqlAlchemyDepartmentRepository(db))
+        return service.list_departments()
 
     return router

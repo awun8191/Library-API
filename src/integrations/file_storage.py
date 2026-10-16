@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Tuple
 import uuid
@@ -22,7 +23,7 @@ class FileStorage(FileStorageRepository):
 
         try:
             content = await file.read()
-            target_path.write_bytes(content)
+            await asyncio.to_thread(target_path.write_bytes, content)
         except OSError as exc:
             raise FileUploadException(f"Failed to store file: {exc}") from exc
 

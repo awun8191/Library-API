@@ -22,6 +22,8 @@ ENV
 
 # Uploaded books (local file storage)
 uploads/
+Storage/
+storage/
 
 # Test, type, and lint caches
 .pytest_cache/

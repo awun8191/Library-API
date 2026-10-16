@@ -35,3 +35,7 @@ def initialize_app(settings: AppSettings) -> FastAPI:
     app.include_router(router=get_departments_router(settings))
 
     return app
+
+
+if __name__ == "__main__":
+    app = initialize_app(settings=AppSettings())

@@ -65,6 +65,3 @@ class BookRepository(Protocol):
     ) -> BookAccessHistoryResponse:
         """Retrieve paginated reading history for a user."""
         ...
-
-
-

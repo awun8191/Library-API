@@ -1,13 +1,30 @@
 """Book resource API routes."""
-from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
+from sqlalchemy.orm import Session
 
 from core.config import AppSettings
-from dependencies import get_current_user, require_admin
-from modules.books.data import BookListResponse, BookResponse, BookUpdateRequest, BookAccessResponse, \
-    BookAccessHistoryResponse
+from dependencies import get_current_user, get_db, require_admin
+from integrations.file_storage import FileStorage
+from modules.books.data import (
+    BookAccessHistoryResponse,
+    BookAccessResponse,
+    BookListResponse,
+    BookResponse,
+    BookUpdateRequest,
+)
+from modules.books.service import BookService
+from modules.departments.repository import SqlAlchemyDepartmentRepository
 from modules.users.data import UserResponse
+
+
+def get_book_service(db: Session = Depends(get_db)) -> BookService:
+    """Dependency that instantiates BookService with its database session and storage."""
+    return BookService(
+        db=db,
+        file_storage=FileStorage(),
+        dept_repo=SqlAlchemyDepartmentRepository(db),
+    )
 
 
 def get_books_router(settings: AppSettings) -> APIRouter:
@@ -25,6 +42,7 @@ def get_books_router(settings: AppSettings) -> APIRouter:
             400: {"description": "Bad request (e.g. invalid file type)"},
             401: {"description": "Unauthenticated"},
             403: {"description": "Forbidden (Admin only)"},
+            404: {"description": "Department not found"},
             409: {"description": "Conflict (Duplicate file hash)"},
         },
     )
@@ -36,20 +54,17 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         department_id: int = Form(...),
         file: UploadFile = File(...),
         current_admin: UserResponse = Depends(require_admin),
+        service: BookService = Depends(get_book_service),
     ):
         """Upload a course material PDF (Admin only)."""
-        # Stub implementation pending service logic wiring
-        return BookResponse(
-            id=1,
+        return await service.upload_book(
             name=name,
             course_name=course_name,
             topic=topic,
             course_code=course_code,
-            file_hash="dummy_hash_sha256",
-            file_url=f"/static/books/{file.filename}",
-            file_path=f"storage/books/{file.filename}",
-            uploaded_by=current_admin.id,
             department_id=department_id,
+            file=file,
+            uploaded_by=current_admin.id,
         )
 
     @router.get(
@@ -70,12 +85,14 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         cursor: Optional[int] = Query(default=None, description="Cursor pagination offset/ID"),
         limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
         current_user: UserResponse = Depends(get_current_user),
+        service: BookService = Depends(get_book_service),
     ):
         """List books matching search criteria and department filters with cursor-based pagination."""
-        return BookListResponse(
-            items=[],
-            next_cursor=None,
-            has_more=False,
+        return service.list_books(
+            q=q,
+            department_id=department_id,
+            cursor=cursor,
+            limit=limit,
         )
 
     @router.get(
@@ -93,20 +110,10 @@ def get_books_router(settings: AppSettings) -> APIRouter:
     async def get_book(
         id: int,
         current_user: UserResponse = Depends(get_current_user),
+        service: BookService = Depends(get_book_service),
     ):
         """Retrieve details of a single course material by ID."""
-        return BookResponse(
-            id=id,
-            name="Sample Course Material",
-            course_name="CS101",
-            topic="Introduction to Programming",
-            course_code="CS101",
-            file_hash="sample_hash",
-            file_url="/static/books/sample.pdf",
-            file_path="storage/books/sample.pdf",
-            uploaded_by=1,
-            department_id=1,
-        )
+        return service.get_book(id)
 
     @router.put(
         f"/api/{settings.api_version}/books/{{id}}",
@@ -119,27 +126,17 @@ def get_books_router(settings: AppSettings) -> APIRouter:
             400: {"description": "Bad request"},
             401: {"description": "Unauthenticated"},
             403: {"description": "Forbidden (Admin only)"},
-            404: {"description": "Book not found"},
+            404: {"description": "Book or department not found"},
         },
     )
     async def update_book(
         id: int,
         payload: BookUpdateRequest,
         current_admin: UserResponse = Depends(require_admin),
+        service: BookService = Depends(get_book_service),
     ):
         """Update book metadata (Admin only)."""
-        return BookResponse(
-            id=id,
-            name=payload.name or "Updated Book Name",
-            course_name=payload.course_name or "CS101",
-            topic=payload.topic or "Topic",
-            course_code=payload.course_code or "CS101",
-            file_hash="sample_hash",
-            file_url="/static/books/sample.pdf",
-            file_path="storage/books/sample.pdf",
-            uploaded_by=current_admin.id,
-            department_id=payload.department_id or 1,
-        )
+        return service.update_book(id, payload)
 
     @router.delete(
         f"/api/{settings.api_version}/books/{{id}}",
@@ -156,12 +153,11 @@ def get_books_router(settings: AppSettings) -> APIRouter:
     async def delete_book(
         id: int,
         current_admin: UserResponse = Depends(require_admin),
+        service: BookService = Depends(get_book_service),
     ):
         """Delete a book and its stored file (Admin only)."""
+        service.delete_book(id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-
 
     @router.post(
         f"/api/{settings.api_version}/books/{{id}}/access",
@@ -178,14 +174,10 @@ def get_books_router(settings: AppSettings) -> APIRouter:
     async def record_book_access(
         id: int,
         current_user: UserResponse = Depends(get_current_user),
+        service: BookService = Depends(get_book_service),
     ):
         """Record that the current user opened a book."""
-        return BookAccessResponse(
-            id=1,
-            user_id=current_user.id,
-            book_id=id,
-            accessed_at=datetime.now(timezone.utc),
-        )
+        return service.record_access(book_id=id, user_id=current_user.id)
 
     @router.get(
         f"/api/{settings.api_version}/users/me/access-history",
@@ -203,12 +195,13 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         cursor: Optional[int] = Query(default=None, description="Cursor pagination offset/ID"),
         limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
         current_user: UserResponse = Depends(get_current_user),
+        service: BookService = Depends(get_book_service),
     ):
         """Retrieve the reading/access history for the current user with cursor pagination."""
-        return BookAccessHistoryResponse(
-            items=[],
-            next_cursor=None,
-            has_more=False,
+        return service.get_user_access_history(
+            user_id=current_user.id,
+            cursor=cursor,
+            limit=limit,
         )
 
     return router
