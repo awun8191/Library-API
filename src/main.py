@@ -26,6 +26,8 @@ def initialize_app(settings: AppSettings) -> FastAPI:
         summary=settings.api_summary,
         version=settings.api_version,
         lifespan=lifespan,
+        docs_url= "/docs" if settings.environment == "development" else None,
+        redoc_url= "/redoc" if settings.environment == "development" else None,
     )
 
     register_exception_handler(app)
