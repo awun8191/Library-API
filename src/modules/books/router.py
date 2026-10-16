@@ -13,15 +13,16 @@ from modules.books.data import (
     BookResponse,
     BookUpdateRequest,
 )
+from modules.books.repository import SqlAlchemyBookRepository
 from modules.books.service import BookService
 from modules.departments.repository import SqlAlchemyDepartmentRepository
 from modules.users.data import UserResponse
 
 
 def get_book_service(db: Session = Depends(get_db)) -> BookService:
-    """Dependency that instantiates BookService with its database session and storage."""
+    """Dependency that instantiates BookService with its repository and storage adapters."""
     return BookService(
-        db=db,
+        book_repo=SqlAlchemyBookRepository(db),
         file_storage=FileStorage(),
         dept_repo=SqlAlchemyDepartmentRepository(db),
     )

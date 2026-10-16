@@ -37,7 +37,7 @@ async def get_current_user(
         first_name="Test",
         last_name="User",
         email="user@school.edu",
-        role="user",
+        role="admin",
         is_active=True,
         department_id=1,
     )
