@@ -12,10 +12,10 @@ from modules.departments.service import DepartmentService
 
 def get_departments_router(settings: AppSettings) -> APIRouter:
     """Return the departments router."""
-    router = APIRouter()
+    router = APIRouter(prefix=settings.api_prefix)
 
     @router.get(
-        f"/api/{settings.api_version}/departments",
+        "/departments",
         response_model=List[DepartmentResponse],
         status_code=status.HTTP_200_OK,
         tags=["Departments"],

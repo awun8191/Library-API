@@ -1,41 +1,36 @@
 """Authentication resource API routes."""
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 from core.config import AppSettings
+from dependencies import get_auth_service
 from modules.auth.data import LoginRequest, SignupRequest, TokenResponse
+from modules.auth.service import AuthService
 from modules.users.data import UserResponse
 
 
 def get_auth_router(settings: AppSettings) -> APIRouter:
     """Return the authentication router."""
-    router = APIRouter()
+    router = APIRouter(prefix=settings.api_prefix)
 
     @router.post(
-        f"/api/{settings.api_version}/auth/signup",
+        "/auth/signup",
         response_model=UserResponse,
         status_code=status.HTTP_201_CREATED,
         tags=["Auth"],
         summary="Create an account",
         responses={
             201: {"description": "Account created successfully"},
-            400: {"description": "Bad request or user already exists"},
+            400: {"description": "Invalid request data"},
+            404: {"description": "Department not found"},
+            409: {"description": "An account with this email already exists"},
         },
     )
-    async def signup(payload: SignupRequest):
+    def signup(payload: SignupRequest, service: AuthService = Depends(get_auth_service)):
         """Create a new user account."""
-        # Stub implementation pending service logic wiring
-        return UserResponse(
-            id=1,
-            first_name=payload.first_name,
-            last_name=payload.last_name,
-            email=payload.email,
-            role="user",
-            is_active=True,
-            department_id=payload.department_id,
-        )
+        return service.signup(payload)
 
     @router.post(
-        f"/api/{settings.api_version}/auth/login",
+        "/auth/login",
         response_model=TokenResponse,
         status_code=status.HTTP_200_OK,
         tags=["Auth"],
@@ -43,14 +38,11 @@ def get_auth_router(settings: AppSettings) -> APIRouter:
         responses={
             200: {"description": "Authentication successful"},
             401: {"description": "Invalid credentials"},
+            403: {"description": "Account is inactive"},
         },
     )
-    async def login(payload: LoginRequest):
-        """Authenticate user and return an access token."""
-        # Stub implementation pending service logic wiring
-        return TokenResponse(
-            access_token="dev_placeholder_access_token",
-            token_type="bearer",
-        )
+    def login(payload: LoginRequest, service: AuthService = Depends(get_auth_service)):
+        """Authenticate a user and return an access token."""
+        return service.login(payload)
 
     return router

@@ -19,7 +19,7 @@ class DepartmentRepository(Protocol):
         ...
 
 
-class SqlAlchemyDepartmentRepository(DepartmentRepository):
+class SqlAlchemyDepartmentRepository:
     def __init__(self, session: Session):
         self.session = session
 

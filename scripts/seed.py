@@ -19,9 +19,11 @@ from sqlalchemy import select, text  # noqa: E402
 
 from core.config import get_settings  # noqa: E402
 from integrations.database import get_db_manager  # noqa: E402
+from integrations.security import Argon2PasswordHasher  # noqa: E402
 from schema.models import Book, BookAccess, Department, User  # noqa: E402
 
 STORAGE_DIR = ROOT / "Storage"
+DEV_PASSWORD = "dev-password-123"
 
 DEPARTMENTS = ["Computer Science", "Electrical Engineering", "Mechanical Engineering"]
 
@@ -79,6 +81,7 @@ def seed_database() -> None:
             departments[name] = dept
 
         users = {}
+        dev_password_hash = Argon2PasswordHasher().hash(DEV_PASSWORD)
         for first, last, email, role, dept_name in USERS:
             user = session.execute(select(User).where(User.email == email)).scalar_one_or_none()
             if not user:
@@ -86,13 +89,15 @@ def seed_database() -> None:
                     first_name=first,
                     last_name=last,
                     email=email,
-                    password_hash="dummy_hash_dev_only",
+                    password_hash=dev_password_hash,
                     role=role,
                     is_active=True,
                     department_id=departments[dept_name].id,
                 )
                 session.add(user)
                 session.flush()
+            else:
+                user.password_hash = dev_password_hash
             users[email] = user
 
         admin = users["admin@school.edu"]
@@ -110,7 +115,6 @@ def seed_database() -> None:
                     topic=topic,
                     course_code=course_code,
                     file_hash=file_hash,
-                    file_url=f"/static/books/{file_name}",
                     file_path=str(STORAGE_DIR / file_name),
                     uploaded_by=admin.id,
                     department_id=departments[dept_name].id,
@@ -134,6 +138,7 @@ def seed_database() -> None:
             )
         session.commit()
         print(f"Seeded {len(departments)} departments, {len(users)} users, {len(books)} books.")
+        print(f"Development login: admin@school.edu or student@school.edu, password '{DEV_PASSWORD}'")
     finally:
         session.close()
         manager.close()

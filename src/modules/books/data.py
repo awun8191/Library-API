@@ -1,7 +1,15 @@
 """Book resource data models and schemas."""
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, computed_field
+
+from core.config import get_settings
+
+
+def book_file_url(book_id: int) -> str:
+    """Return the authenticated download path of a book."""
+    return f"{get_settings().api_prefix}/books/{book_id}/file"
 
 
 class BookResponse(BaseModel):
@@ -12,11 +20,16 @@ class BookResponse(BaseModel):
     topic: str
     course_code: str
     department_id: int
-    file_url: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def file_url(self) -> str:
+        """Download path of the stored PDF."""
+        return book_file_url(self.id)
 
 
 class BookUpdateRequest(BaseModel):
@@ -56,6 +69,12 @@ class BookAccessItemResponse(BaseModel):
     accessed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def file_url(self) -> str:
+        """Download path of the stored PDF."""
+        return book_file_url(self.book_id)
 
 
 class BookAccessHistoryResponse(BaseModel):

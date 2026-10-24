@@ -1,5 +1,5 @@
 """User resource persistence contracts and queries."""
-from typing import Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -8,7 +8,6 @@ from modules.users.data import UserResponse, UserUpdateRequest
 from schema.models import User
 
 
-@runtime_checkable
 class UserRepository(Protocol):
     def get_by_id(self, user_id: int) -> Optional[UserResponse]:
         """Fetch user by ID."""
@@ -19,7 +18,9 @@ class UserRepository(Protocol):
         ...
 
 
-class SqlAlchemyUserRepository(UserRepository):
+class SqlAlchemyUserRepository:
+    """SQLAlchemy implementation of the UserRepository contract."""
+
     def __init__(self, session: Session):
         self.session = session
 

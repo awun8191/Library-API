@@ -1,21 +1,22 @@
 """User resource API routes."""
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
 
 from core.config import AppSettings
-from dependencies import get_current_user, get_db
-from modules.departments.repository import SqlAlchemyDepartmentRepository
+from dependencies import get_book_service, get_current_user, get_user_service
+from modules.books.data import BookAccessHistoryResponse
+from modules.books.service import BookService
 from modules.users.data import UserResponse, UserUpdateRequest
-from modules.users.repository import SqlAlchemyUserRepository
 from modules.users.service import UserService
 
 
 def get_users_router(settings: AppSettings) -> APIRouter:
     """Return the user router."""
-    router = APIRouter()
+    router = APIRouter(prefix=settings.api_prefix)
 
     @router.get(
-        f"/api/{settings.api_version}/users/me",
+        "/users/me",
         response_model=UserResponse,
         status_code=status.HTTP_200_OK,
         tags=["Users"],
@@ -26,40 +27,57 @@ def get_users_router(settings: AppSettings) -> APIRouter:
             404: {"description": "User not found"},
         },
     )
-    async def get_me(
+    def get_me(
         current_user: UserResponse = Depends(get_current_user),
-        db: Session = Depends(get_db),
+        service: UserService = Depends(get_user_service),
     ):
         """Retrieve the profile of the currently authenticated user."""
-        service = UserService(
-            user_repo=SqlAlchemyUserRepository(db),
-            dept_repo=SqlAlchemyDepartmentRepository(db),
-        )
         return service.get_user_profile(current_user.id)
 
-    @router.put(
-        f"/api/{settings.api_version}/users/me",
+    @router.patch(
+        "/users/me",
         response_model=UserResponse,
         status_code=status.HTTP_200_OK,
         tags=["Users"],
         summary="Update own profile",
         responses={
             200: {"description": "Profile updated successfully"},
-            400: {"description": "Bad request"},
+            400: {"description": "Invalid request data"},
             401: {"description": "Unauthenticated"},
             404: {"description": "User or department not found"},
         },
     )
-    async def update_me(
+    def update_me(
         payload: UserUpdateRequest,
         current_user: UserResponse = Depends(get_current_user),
-        db: Session = Depends(get_db),
+        service: UserService = Depends(get_user_service),
     ):
         """Update fields on the current user's profile."""
-        service = UserService(
-            user_repo=SqlAlchemyUserRepository(db),
-            dept_repo=SqlAlchemyDepartmentRepository(db),
-        )
         return service.update_user_profile(current_user.id, payload)
+
+    @router.get(
+        "/users/me/access-history",
+        response_model=BookAccessHistoryResponse,
+        status_code=status.HTTP_200_OK,
+        tags=["Users"],
+        summary="Books the current user has opened",
+        responses={
+            200: {"description": "Access history fetched successfully"},
+            400: {"description": "Invalid request data"},
+            401: {"description": "Unauthenticated"},
+        },
+    )
+    def get_my_access_history(
+        cursor: Optional[int] = Query(default=None, description="Cursor from the previous page"),
+        limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
+        current_user: UserResponse = Depends(get_current_user),
+        service: BookService = Depends(get_book_service),
+    ):
+        """Retrieve the reading history of the current user with cursor pagination."""
+        return service.get_user_access_history(
+            user_id=current_user.id,
+            cursor=cursor,
+            limit=limit,
+        )
 
     return router

@@ -28,7 +28,7 @@ class DatabaseManager:
 _db_manager: DatabaseManager | None = None
 
 
-def get_db_manager(database_url: str | None = None) -> DatabaseManager | None:
+def get_db_manager(database_url: str | None = None) -> DatabaseManager:
     global _db_manager
     if _db_manager is None or database_url is not None:
         url = database_url or get_settings().database_url

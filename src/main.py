@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
-from pathlib import Path
+
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
 from core.config import AppSettings, get_settings
 from core.exceptions import register_exception_handler
 from integrations.database import get_db_manager
+from middleware import register_middleware
 from modules.auth.router import get_auth_router
 from modules.books.router import get_books_router
 from modules.departments.router import get_departments_router
@@ -20,22 +20,20 @@ async def lifespan(app: FastAPI):
 
 def initialize_app(settings: AppSettings) -> FastAPI:
     """Initialize and configure the FastAPI application."""
+    is_development = settings.environment == "development"
     app = FastAPI(
         title=settings.api_name,
         description=settings.api_description,
         summary=settings.api_summary,
         version=settings.api_version,
         lifespan=lifespan,
-        docs_url= "/docs" if settings.environment == "development" else None,
-        redoc_url= "/redoc" if settings.environment == "development" else None,
+        docs_url="/docs" if is_development else None,
+        redoc_url="/redoc" if is_development else None,
+        openapi_url="/openapi.json" if is_development else None,
     )
 
     register_exception_handler(app)
-
-    # Mount static files to serve uploaded PDFs
-    storage_dir = Path(__file__).resolve().parent.parent / "Storage"
-    storage_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/static/books", StaticFiles(directory=str(storage_dir)), name="static_books")
+    register_middleware(app, settings)
 
     # Register resource routers
     app.include_router(router=get_auth_router(settings))

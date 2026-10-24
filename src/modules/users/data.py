@@ -16,6 +16,17 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserCredentials(BaseModel):
+    """Internal record with the password hash. Never returned by the API."""
+    id: int
+    email: EmailStr
+    password_hash: str
+    role: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserUpdateRequest(BaseModel):
     """Schema for updating current user profile."""
     first_name: Optional[str] = None
