@@ -1,7 +1,7 @@
 """Book resource API routes."""
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 from core.config import AppSettings
@@ -9,10 +9,26 @@ from dependencies import get_book_service, get_current_user, require_admin
 from modules.books.data import (
     BookListResponse,
     BookResponse,
+    COURSE_CODE_MAX,
+    NAME_MAX,
     BookUpdateRequest,
 )
 from modules.books.service import BookService
 from modules.users.data import UserResponse
+
+
+NOT_BLANK = r".*\S.*"
+
+
+def _is_first_read(range_header: str | None) -> bool:
+    """True for a plain download or the first byte range of one.
+
+    PDF viewers fetch a file in many Range requests. Only the request that
+    starts at byte 0 counts as opening the book, so one read writes one row.
+    """
+    if not range_header:
+        return True
+    return range_header.replace(" ", "").lower().startswith("bytes=0-")
 
 
 def _download_filename(name: str) -> str:
@@ -34,27 +50,28 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         responses={
             201: {"description": "Book uploaded successfully"},
             400: {"description": "Invalid request data or invalid file type"},
+            413: {"description": "File is larger than the upload limit"},
             401: {"description": "Unauthenticated"},
             403: {"description": "Forbidden (Admin only)"},
             404: {"description": "Department not found"},
             409: {"description": "Conflict (Duplicate file hash)"},
         },
     )
-    async def upload_book(
-        name: str = Form(...),
-        course_name: str = Form(...),
-        topic: str = Form(...),
-        course_code: str = Form(...),
-        department_id: int = Form(...),
+    def upload_book(
+        name: str = Form(..., min_length=1, max_length=NAME_MAX, pattern=NOT_BLANK),
+        course_name: str = Form(..., min_length=1, max_length=NAME_MAX, pattern=NOT_BLANK),
+        topic: str = Form(..., min_length=1, max_length=NAME_MAX, pattern=NOT_BLANK),
+        course_code: str = Form(..., min_length=1, max_length=COURSE_CODE_MAX, pattern=NOT_BLANK),
+        department_id: int = Form(..., gt=0),
         file: UploadFile = File(...),
         current_admin: UserResponse = Depends(require_admin),
         service: BookService = Depends(get_book_service),
     ):
         """Upload a course material PDF (Admin only)."""
-        return await service.upload_book(
-            name=name,
-            course_name=course_name,
-            topic=topic,
+        return service.upload_book(
+            name=name.strip(),
+            course_name=course_name.strip(),
+            topic=topic.strip(),
             course_code=course_code,
             department_id=department_id,
             file=file,
@@ -121,11 +138,16 @@ def get_books_router(settings: AppSettings) -> APIRouter:
     )
     def download_book(
         id: int,
+        request: Request,
         current_user: UserResponse = Depends(get_current_user),
         service: BookService = Depends(get_book_service),
     ):
         """Stream the stored PDF and record the access for the current user."""
-        file_path, book = service.open_book(book_id=id, user_id=current_user.id)
+        file_path, book = service.open_book(
+            book_id=id,
+            user_id=current_user.id,
+            record=_is_first_read(request.headers.get("range")),
+        )
         return FileResponse(
             path=file_path,
             media_type="application/pdf",

@@ -37,12 +37,8 @@ class SqlAlchemyUserRepository:
         if not user:
             return None
 
-        if payload.first_name is not None:
-            user.first_name = payload.first_name
-        if payload.last_name is not None:
-            user.last_name = payload.last_name
-        if payload.department_id is not None:
-            user.department_id = payload.department_id
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(user, field, value)
 
         self.session.commit()
         self.session.refresh(user)

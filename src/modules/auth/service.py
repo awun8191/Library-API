@@ -53,7 +53,10 @@ class AuthService:
     def login(self, payload: LoginRequest) -> TokenResponse:
         credentials = self.repository.get_credentials_by_email(str(payload.email))
 
-        if credentials is None or not self.hasher.verify(payload.password, credentials.password_hash):
+        if credentials is None:
+            self.hasher.dummy_verify(payload.password)
+            raise InvalidCredentialsException()
+        if not self.hasher.verify(payload.password, credentials.password_hash):
             raise InvalidCredentialsException()
 
         if not credentials.is_active:

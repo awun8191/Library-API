@@ -27,12 +27,12 @@ def get_users_router(settings: AppSettings) -> APIRouter:
             404: {"description": "User not found"},
         },
     )
-    def get_me(
-        current_user: UserResponse = Depends(get_current_user),
-        service: UserService = Depends(get_user_service),
-    ):
-        """Retrieve the profile of the currently authenticated user."""
-        return service.get_user_profile(current_user.id)
+    def get_me(current_user: UserResponse = Depends(get_current_user)):
+        """Retrieve the profile of the currently authenticated user.
+
+        get_current_user already reads the user from the database on this request.
+        """
+        return current_user
 
     @router.patch(
         "/users/me",

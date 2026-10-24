@@ -24,6 +24,7 @@ class UserService:
 
     def update_user_profile(self, user_id: int, payload: UserUpdateRequest) -> UserResponse:
         if payload.department_id is not None and self.dept_repo is not None:
+            # A null department_id clears the department and needs no lookup.
             dept = self.dept_repo.get_by_id(payload.department_id)
             if not dept:
                 raise DepartmentNotFoundException()

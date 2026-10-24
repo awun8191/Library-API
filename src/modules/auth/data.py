@@ -5,11 +5,11 @@ from pydantic import BaseModel, EmailStr, Field
 
 class SignupRequest(BaseModel):
     """Schema for account registration."""
-    first_name: str = Field(min_length=1, max_length=100)
-    last_name: str = Field(min_length=1, max_length=100)
+    first_name: str = Field(min_length=1, max_length=100, pattern=r".*\S.*")
+    last_name: str = Field(min_length=1, max_length=100, pattern=r".*\S.*")
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    department_id: Optional[int] = None
+    department_id: Optional[int] = Field(default=None, gt=0)
 
 
 class LoginRequest(BaseModel):

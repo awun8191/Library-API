@@ -3,8 +3,8 @@ from typing import Optional, Protocol, Tuple
 
 
 class FileStorageRepository(Protocol):
-    async def store_file(self, content: bytes) -> str:
-        """Store the bytes of a PDF and return the stored path."""
+    def store_file(self, content: bytes) -> str:
+        """Store the bytes of a PDF and return the stored file name."""
         ...
 
     def get_file_path(self, file_path: str) -> str:
@@ -23,6 +23,10 @@ class PasswordHasher(Protocol):
 
     def verify(self, password: str, password_hash: str) -> bool:
         """Check a plain password against a stored hash."""
+        ...
+
+    def dummy_verify(self, password: str) -> None:
+        """Spend the time of a real check when the account does not exist."""
         ...
 
 

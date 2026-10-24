@@ -1,7 +1,7 @@
 """Book resource persistence contracts and queries."""
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Tuple
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from modules.books.data import (
@@ -11,6 +11,7 @@ from modules.books.data import (
     BookListResponse,
     BookResponse,
     BookUpdateRequest,
+    normalize_course_code,
 )
 from schema.models import Book, BookAccess
 
@@ -41,8 +42,8 @@ class BookRepository(Protocol):
         """Fetch a single book by ID."""
         ...
 
-    def read_file_path(self, book_id: int) -> Optional[str]:
-        """Fetch the stored file path of a book."""
+    def read_book_with_file(self, book_id: int) -> Optional[Tuple[BookResponse, str]]:
+        """Fetch a book and its stored file name in one query."""
         ...
 
     def find_by_file_hash(self, file_hash: str) -> Optional[BookResponse]:
@@ -126,9 +127,12 @@ class SqlAlchemyBookRepository:
             return None
         return BookResponse.model_validate(book)
 
-    def read_file_path(self, book_id: int) -> Optional[str]:
-        stmt = select(Book.file_path).where(Book.id == book_id)
-        return self.session.execute(stmt).scalar_one_or_none()
+    def read_book_with_file(self, book_id: int) -> Optional[Tuple[BookResponse, str]]:
+        stmt = select(Book).where(Book.id == book_id)
+        book = self.session.execute(stmt).scalar_one_or_none()
+        if not book:
+            return None
+        return BookResponse.model_validate(book), book.file_path
 
     def find_by_file_hash(self, file_hash: str) -> Optional[BookResponse]:
         stmt = select(Book).where(Book.file_hash == file_hash)
@@ -143,16 +147,8 @@ class SqlAlchemyBookRepository:
         if not book:
             return None
 
-        if payload.name is not None:
-            book.name = payload.name
-        if payload.course_name is not None:
-            book.course_name = payload.course_name
-        if payload.topic is not None:
-            book.topic = payload.topic
-        if payload.course_code is not None:
-            book.course_code = payload.course_code
-        if payload.department_id is not None:
-            book.department_id = payload.department_id
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(book, field, value)
 
         self.session.commit()
         self.session.refresh(book)
@@ -183,7 +179,7 @@ class SqlAlchemyBookRepository:
         if department_id is not None:
             stmt = stmt.where(Book.department_id == department_id)
         if course_code:
-            stmt = stmt.where(func.upper(Book.course_code) == course_code.strip().upper())
+            stmt = stmt.where(Book.course_code == normalize_course_code(course_code))
         if cursor is not None:
             stmt = stmt.where(Book.id > cursor)
         stmt = stmt.order_by(Book.id.asc()).limit(limit + 1)

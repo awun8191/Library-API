@@ -21,7 +21,8 @@ A digital library for a school where admins upload course materials (PDFs), stud
 | Search | Simple text search on book name. Wildcard characters are escaped |
 | Filtering | By department and by course code |
 | Pagination | Cursor-based on the book listing and on the access history |
-| Storage | Real PDFs on local disk (`Storage/`, git-ignored). The API checks the `%PDF-` signature |
+| Storage | Real PDFs on local disk (`Storage/`, git-ignored). The database stores only the file name. The API checks the `%PDF-` signature |
+| Upload size | Capped by `MAX_UPLOAD_SIZE_MB` (default 20). The upload is read in chunks and a larger file returns **413** |
 | Identity | The token subject is the user id. `/users/me` reads the user from the database on each request |
 | Browser access | CORS origins come from `CORS_ALLOW_ORIGINS` |
 | Columns | snake_case |
@@ -85,7 +86,7 @@ Resource services depend on the contracts in `src/core/repository.py`. `src/inte
 
 All routes are served under the `/api/v1` prefix. Interactive docs: `/docs` (Swagger) and `/redoc`. Both are disabled in production, including `/openapi.json`.
 
-Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad request · **401** Unauthenticated · **403** Forbidden · **404** Not found · **409** Conflict
+Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad request · **401** Unauthenticated · **403** Forbidden · **404** Not found · **409** Conflict · **413** File too large
 
 **Auth**
 
@@ -106,7 +107,7 @@ Status codes: **200** OK · **201** Created · **204** No Content · **400** Bad
 
 | Method | Path | Access | Purpose | Status codes |
 |---|---|---|---|---|
-| POST | `/api/v1/books` | Admin | Upload a book (PDF, multipart form) | 201 · 400 · 401 · 403 · 404 · 409 |
+| POST | `/api/v1/books` | Admin | Upload a book (PDF, multipart form) | 201 · 400 · 401 · 403 · 404 · 409 · 413 |
 | GET | `/api/v1/books` | Public | List with search, filters, and cursor pagination | 200 · 400 |
 | GET | `/api/v1/books/{id}` | Public | One book | 200 · 404 |
 | GET | `/api/v1/books/{id}/file` | Authenticated | Stream the PDF and record the access | 200 · 401 · 403 · 404 |
@@ -196,7 +197,7 @@ curl -X POST http://localhost:8000/api/v1/books \
 }
 ```
 
-Uploading the same file again returns `409` with the name of the book that already holds it. A non-PDF returns `400`. An unknown `department_id` returns `404`.
+Uploading the same file again returns `409` with the name of the book that already holds it. A non-PDF, a blank field, or a field over its length limit returns `400`. A file over the size limit returns `413`. An unknown `department_id` returns `404`. Course codes are stored in upper case.
 
 **List and search**: `GET /api/v1/books?q=algorithms&department_id=1&course_code=CSC201&limit=10`
 
@@ -219,9 +220,9 @@ Pass `next_cursor` as `cursor` to fetch the next page. Search terms are matched 
 curl -L -H "Authorization: Bearer $TOKEN" -o book.pdf http://localhost:8000/api/v1/books/4/file
 ```
 
-The response is the PDF stream. The same request writes one `BookAccess` row for the current user. Response headers include `Cache-Control: private, no-store`.
+The response is the PDF stream. The request writes one `BookAccess` row for the current user. PDF viewers fetch a file in several `Range` requests, so only a plain request or the range starting at byte 0 is recorded. Response headers include `Cache-Control: private, no-store`.
 
-**Update a book**: `PATCH /api/v1/books/4` (all fields optional)
+**Update a book**: `PATCH /api/v1/books/4` (all fields optional; only the fields sent change; blanks and nulls return `400`)
 
 ```json
 { "topic": "Sorting and Searching", "course_code": "CSC202" }
@@ -296,7 +297,7 @@ uv run alembic upgrade head      # tables and the development admin
 uv run python scripts/seed.py    # 3 departments, 2 accounts, 3 dummy PDFs, history
 ```
 
-The seed script prints the development logins: `admin@school.edu` and `student@school.edu`, password `dev-password-123`. Both passwords are Argon2 hashes.
+The seed script only runs when `ENVIRONMENT=development`. It prints the development logins: `admin@school.edu` and `student@school.edu`, password `dev-password-123`. Both passwords are Argon2 hashes.
 
 **4. Run the API** (from the repo root, so `.env` is found)
 
@@ -319,7 +320,7 @@ Open **http://localhost:8000/docs** to try every endpoint.
 
 | Item | Detail |
 |---|---|
-| Migrations | Alembic: initial schema, development seed, Week 2 auth changes |
+| Migrations | Alembic: initial schema, development seed, Week 2 auth changes, file names and course codes |
 | Dummy data | `scripts/seed.py` is safe to run repeatedly |
 | Config | `.env.example` holds dummy dev values. No real `.env` is committed |
 | Tests | Week 3 |
@@ -346,6 +347,7 @@ The API uses bearer tokens, not cookies, so `allow_credentials` stays false. The
 | PDF delivery behind authentication | Done |
 | Access history written when the file is served | Done |
 | Course code filter, literal search, PATCH semantics | Done |
+| Input validation and upload size limit | Done |
 | CORS through `src/middleware/` | Done |
 | Error codes on every handled error | Done |
 | Tests, deployment, final docs | Week 3 |
@@ -355,9 +357,11 @@ The API uses bearer tokens, not cookies, so `allow_credentials` stays false. The
 | # | Decision | Outcome |
 |---|---|---|
 | 1 | Distinctiveness | File-hash duplicate rule (DB `UNIQUE` → 409) and department-scoped browsing |
-| 2 | File-heavy risk | Store real PDFs locally, PDF signature check, size limits to be added later |
+| 2 | File-heavy risk | Store real PDFs locally, PDF signature check, upload size limit (`MAX_UPLOAD_SIZE_MB`, 413) |
 | 3 | Unique email | `users.email` is `UNIQUE`. Signup returns 409 for a duplicate |
 | 4 | Token contents | Only `sub`, `iat`, `exp`, and `iss`. The role comes from the database, not the token |
 | 5 | File delivery | One authenticated route streams the PDF and writes the history row. No public static mount |
 | 6 | Partial updates | `PATCH` for books and profiles. `PUT` implied a full replace, which the handlers did not do |
 | 7 | `file_url` | Derived from the book id in the response. One stored location, `file_path` |
+| 8 | Stored file names | `file_path` holds only the file name, joined with the storage folder at read time, so the folder can move |
+| 9 | Sync routes | Routes that use the synchronous SQLAlchemy session are plain `def`, so FastAPI runs them in its threadpool instead of blocking the event loop |

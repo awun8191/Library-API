@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 from core.config import get_settings
 
@@ -32,13 +32,37 @@ class BookResponse(BaseModel):
         return book_file_url(self.id)
 
 
+NAME_MAX = 255
+COURSE_CODE_MAX = 64
+
+
+def normalize_course_code(value: str) -> str:
+    """Store course codes in one form (upper case, no outer spaces)."""
+    return value.strip().upper()
+
+
 class BookUpdateRequest(BaseModel):
-    """Schema for updating book details."""
-    name: Optional[str] = None
-    course_name: Optional[str] = None
-    topic: Optional[str] = None
-    course_code: Optional[str] = None
-    department_id: Optional[int] = None
+    """Schema for updating book details. Only the fields sent are changed."""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=NAME_MAX)
+    course_name: Optional[str] = Field(default=None, min_length=1, max_length=NAME_MAX)
+    topic: Optional[str] = Field(default=None, min_length=1, max_length=NAME_MAX)
+    course_code: Optional[str] = Field(default=None, min_length=1, max_length=COURSE_CODE_MAX)
+    department_id: Optional[int] = Field(default=None, gt=0)
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    @field_validator("name", "course_name", "topic", "course_code", "department_id", mode="before")
+    @classmethod
+    def reject_null(cls, value):
+        """Every book column is required, so an explicit null is invalid."""
+        if value is None:
+            raise ValueError("cannot be null")
+        return value
+
+    @field_validator("course_code")
+    @classmethod
+    def upper_course_code(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_course_code(value) if value is not None else value
 
 
 class BookListResponse(BaseModel):

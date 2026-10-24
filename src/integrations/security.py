@@ -12,6 +12,9 @@ class Argon2PasswordHasher:
 
     def __init__(self) -> None:
         self._hasher = Argon2Hasher()
+        # Checked when an email is unknown, so a failed login takes the same
+        # time whether or not the account exists.
+        self._dummy_hash = self._hasher.hash("timing-equaliser-password")
 
     def hash(self, password: str) -> str:
         return self._hasher.hash(password)
@@ -21,6 +24,13 @@ class Argon2PasswordHasher:
             return self._hasher.verify(password_hash, password)
         except (VerifyMismatchError, VerificationError, InvalidHashError):
             return False
+
+    def dummy_verify(self, password: str) -> None:
+        """Spend the same time as a real check, for unknown emails."""
+        self.verify(password, self._dummy_hash)
+
+
+TOKEN_ISSUER = "library-api"
 
 
 class JwtTokenIssuer:
@@ -34,7 +44,7 @@ class JwtTokenIssuer:
     def issue(self, user_id: int) -> Tuple[str, int]:
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(minutes=self.expire_minutes)
-        payload = {"sub": str(user_id), "iat": now, "exp": expires_at, "iss": "library-api"}
+        payload = {"sub": str(user_id), "iat": now, "exp": expires_at, "iss": TOKEN_ISSUER}
         token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
         return token, self.expire_minutes * 60
 
@@ -44,7 +54,8 @@ class JwtTokenIssuer:
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],
-                options={"require": ["exp", "sub"]},
+                issuer=TOKEN_ISSUER,
+                options={"require": ["exp", "sub", "iss"]},
             )
         except jwt.InvalidTokenError:
             return None

@@ -67,7 +67,11 @@ def make_pdf(title: str) -> bytes:
 
 
 def seed_database() -> None:
-    manager = get_db_manager(get_settings().database_url)
+    settings = get_settings()
+    if settings.environment != "development":
+        # The seed resets account passwords to a known value, so never run it outside development.
+        sys.exit("Refusing to seed: ENVIRONMENT is not 'development'.")
+    manager = get_db_manager(settings.database_url)
     session = next(manager.get_session())
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -115,7 +119,7 @@ def seed_database() -> None:
                     topic=topic,
                     course_code=course_code,
                     file_hash=file_hash,
-                    file_path=str(STORAGE_DIR / file_name),
+                    file_path=file_name,
                     uploaded_by=admin.id,
                     department_id=departments[dept_name].id,
                 )

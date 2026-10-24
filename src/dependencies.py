@@ -65,16 +65,23 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
     )
 
 
+@lru_cache()
+def get_file_storage() -> FileStorage:
+    """Return the shared local file storage."""
+    return FileStorage()
+
+
 def get_book_service(db: Session = Depends(get_db)) -> BookService:
     """Dependency that instantiates the book service."""
     return BookService(
         book_repo=SqlAlchemyBookRepository(db),
-        file_storage=FileStorage(),
+        file_storage=get_file_storage(),
         dept_repo=SqlAlchemyDepartmentRepository(db),
+        max_upload_bytes=get_settings().max_upload_size_bytes,
     )
 
 
-async def get_current_user(
+def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db),
     token_issuer: TokenIssuer = Depends(get_token_issuer),
@@ -95,7 +102,7 @@ async def get_current_user(
     return user
 
 
-async def require_admin(
+def require_admin(
     current_user: UserResponse = Depends(get_current_user),
 ) -> UserResponse:
     """Dependency ensuring the user has an admin role."""

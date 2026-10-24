@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class AppException(Exception):
@@ -38,6 +39,11 @@ class FileNotFoundException(AppException):
     message: str = "File not found in storage"
     status_code: int = 404
     code: str = "FILE_NOT_FOUND"
+
+class FileTooLargeException(AppException):
+    message: str = "File is too large"
+    status_code: int = 413
+    code: str = "FILE_TOO_LARGE"
 
 class DuplicateFileException(AppException):
     message: str = "Duplicate file: this document has already been uploaded"
@@ -104,6 +110,16 @@ def register_exception_handler(app: FastAPI):
             status_code=exc.status_code,
             content={"message": exc.message, "code": exc.code},
             headers=exc.headers,
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def handle_http_exception(request: Request, exc: StarletteHTTPException):
+        """Give framework errors (unknown route, wrong method) the same shape."""
+        codes = {404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"message": str(exc.detail), "code": codes.get(exc.status_code, "HTTP_ERROR")},
+            headers=getattr(exc, "headers", None),
         )
 
     @app.exception_handler(RequestValidationError)
