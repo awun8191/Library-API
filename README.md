@@ -171,7 +171,7 @@ TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
   -d '{"email":"admin@school.edu","password":"dev-password-123"}' | jq -r .access_token)
 ```
 
-**Upload a book** — `POST /api/v1/books` (multipart/form-data)
+**Upload a book**: `POST /api/v1/books` (multipart/form-data)
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/books \
@@ -198,7 +198,7 @@ curl -X POST http://localhost:8000/api/v1/books \
 
 Uploading the same file again returns `409` with the name of the book that already holds it. A non-PDF returns `400`. An unknown `department_id` returns `404`.
 
-**List and search** — `GET /api/v1/books?q=algorithms&department_id=1&course_code=CSC201&limit=10`
+**List and search**: `GET /api/v1/books?q=algorithms&department_id=1&course_code=CSC201&limit=10`
 
 `200 OK`
 ```json
@@ -213,7 +213,7 @@ Uploading the same file again returns `409` with the name of the book that alrea
 
 Pass `next_cursor` as `cursor` to fetch the next page. Search terms are matched literally, so `%` and `_` do not act as wildcards.
 
-**Download a book** — `GET /api/v1/books/4/file`
+**Download a book**: `GET /api/v1/books/4/file`
 
 ```bash
 curl -L -H "Authorization: Bearer $TOKEN" -o book.pdf http://localhost:8000/api/v1/books/4/file
@@ -221,15 +221,15 @@ curl -L -H "Authorization: Bearer $TOKEN" -o book.pdf http://localhost:8000/api/
 
 The response is the PDF stream. The same request writes one `BookAccess` row for the current user. Response headers include `Cache-Control: private, no-store`.
 
-**Update a book** — `PATCH /api/v1/books/4` (all fields optional)
+**Update a book**: `PATCH /api/v1/books/4` (all fields optional)
 
 ```json
 { "topic": "Sorting and Searching", "course_code": "CSC202" }
 ```
 
-**Delete a book** — `DELETE /api/v1/books/4` returns `204 No Content` and removes the stored PDF.
+**Delete a book**: `DELETE /api/v1/books/4` returns `204 No Content` and removes the stored PDF.
 
-**Reading history** — `GET /api/v1/users/me/access-history?limit=10` (newest first)
+**Reading history**: `GET /api/v1/users/me/access-history?limit=10` (newest first)
 
 `200 OK`
 ```json
@@ -249,7 +249,7 @@ The response is the PDF stream. The same request writes one `BookAccess` row for
 }
 ```
 
-**Departments** — `GET /api/v1/departments`
+**Departments**: `GET /api/v1/departments`
 
 ```json
 [ { "id": 1, "name": "Computer Science" } ]
