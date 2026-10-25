@@ -352,6 +352,21 @@ The API uses bearer tokens, not cookies, so `allow_credentials` stays false. The
 | Error codes on every handled error | Done |
 | Tests, deployment, final docs | Week 3 |
 
+## Issue log
+
+Bugs found while building, the options considered, and how each was fixed.
+
+| # | Issue | Options considered | Fix | Commit |
+|---|---|---|---|---|
+| 1 | Invalid input returned FastAPI's default 422, and unhandled errors could return a stack trace | Keep 422, or return 400 with a global error handler | `RequestValidationError` mapped to 400 with field-level errors. A catch-all handler returns a generic 500 with no internals | `aa026a2` |
+| 2 | Book list, single book and departments required a token, though they were meant to be open in Week 1 | Keep auth and send a dev token everywhere, or remove the dependency from read routes | Removed the auth dependency from those read routes | `0851622` |
+| 3 | Book responses exposed `file_hash`, `file_path` and `uploaded_by` | Hide them per route, or trim the response schema | `BookResponse` now returns only public fields plus `file_url` | `ac5f399` |
+| 4 | Swagger, ReDoc and `/openapi.json` were reachable in production | Protect them with auth, or turn them off in production | Disabled in production through settings | `2058059` |
+| 5 | Uploads had no size limit, and the whole file was read into memory first | Limit at a proxy, or check size in the app | Upload read in 1 MB chunks and stopped past `MAX_UPLOAD_SIZE_MB` (default 20), returning 413 `FILE_TOO_LARGE` | `007a9e8` |
+| 6 | `file_path` stored the full disk path, so moving the storage folder broke every book, and a crafted path could point outside it | Keep full paths and rewrite them on move, or store only the file name | Only the file name is stored and resolved inside the storage folder at read time. A migration converted existing rows | `007a9e8` |
+| 7 | PDF viewers fetch a file in many Range requests, so one read wrote many access-history rows | Throttle by time, or count only the first request | Only a plain download or the range starting at byte 0 writes a row | `007a9e8` |
+| 8 | Updates used `PUT` but changed only the fields sent, and an explicit `null` or blank string got through | Make `PUT` a full replace, or switch to `PATCH` | `PATCH` changes only the fields sent. Nulls and blank strings return 400. Course codes are stored upper case | `007a9e8` |
+
 ## Decisions
 
 | # | Decision | Outcome |
