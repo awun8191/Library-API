@@ -20,6 +20,13 @@ class AppSettings(BaseSettings):
     access_token_expire_minutes: int = Field(default=60, ge=1)
     cors_allow_origins: str = "*"
     storage_dir: str = "Storage"
+    rate_limit_enabled: bool = True
+    rate_limit_backend: Literal["postgres", "memory"] = "postgres"
+    rate_limit_default_per_minute: int = 120
+    rate_limit_login_per_minute: int = 5
+    rate_limit_signup_per_hour: int = 5
+    rate_limit_upload_per_hour: int = 30
+    trust_proxy_headers: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:

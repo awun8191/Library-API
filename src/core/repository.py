@@ -1,4 +1,6 @@
 """Contracts for the infrastructure adapters used by the services."""
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional, Protocol, Tuple
 
 
@@ -33,4 +35,23 @@ class TokenIssuer(Protocol):
 
     def decode_user_id(self, token: str) -> Optional[int]:
         """Return the user id in a valid token, or None when the token is invalid or expired."""
+        ...
+
+
+@dataclass(frozen=True)
+class RateLimitHit:
+    """Report one counter after an increment."""
+
+    hits: int
+    window_start: datetime
+    window_seconds: int
+
+
+class RateLimitStore(Protocol):
+    def increment(self, key: str, window_seconds: int) -> RateLimitHit:
+        """Add one hit to the counter of the key and return the new state."""
+        ...
+
+    def prune(self, older_than_seconds: int) -> None:
+        """Delete the counters whose window started before the cutoff."""
         ...

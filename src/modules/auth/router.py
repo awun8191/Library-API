@@ -23,6 +23,7 @@ def get_auth_router(settings: AppSettings) -> APIRouter:
             400: {"description": "Invalid request data"},
             404: {"description": "Department not found"},
             409: {"description": "An account with this email already exists"},
+            429: {"description": "Too many signup requests"},
         },
     )
     def signup(payload: SignupRequest, service: AuthService = Depends(get_auth_service)):
@@ -39,6 +40,7 @@ def get_auth_router(settings: AppSettings) -> APIRouter:
             200: {"description": "Authentication successful"},
             401: {"description": "Invalid credentials"},
             403: {"description": "Account is inactive"},
+            429: {"description": "Too many login requests"},
         },
     )
     def login(payload: LoginRequest, service: AuthService = Depends(get_auth_service)):

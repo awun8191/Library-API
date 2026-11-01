@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from schema.base import Base
@@ -99,3 +99,15 @@ class BookAccess(Base):
 
     user: Mapped["User"] = relationship(back_populates="book_accesses")
     book: Mapped["Book"] = relationship(back_populates="accesses")
+
+
+class RateLimitCounter(Base):
+    """Hold one request counter for one key and one window."""
+
+    __tablename__ = "rate_limit_counters"
+
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    hits: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")

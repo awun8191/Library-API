@@ -94,6 +94,13 @@ class DepartmentNotFoundException(AppException):
     status_code: int = 404
     code: str = "DEPARTMENT_NOT_FOUND"
 
+# ------------------------   RATE LIMIT EXCEPTIONS -----------------------------------
+
+class RateLimitedException(AppException):
+    message: str = "Too many requests. Try again later."
+    status_code: int = 429
+    code: str = "RATE_LIMITED"
+
 
 
 def register_exception_handler(app: FastAPI):

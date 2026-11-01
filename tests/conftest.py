@@ -29,6 +29,9 @@ os.environ["SECRET_KEY"] = TEST_SECRET_KEY
 os.environ["ENVIRONMENT"] = "development"
 STORAGE_DIRECTORY = tempfile.mkdtemp(prefix="library-api-storage-")
 os.environ["STORAGE_DIR"] = STORAGE_DIRECTORY
+# Keep the limits out of the existing tests. Each rate limit test turns them on.
+os.environ["RATE_LIMIT_BACKEND"] = "memory"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 # Remove the directory even when a session fixture fails during setup.
 atexit.register(shutil.rmtree, STORAGE_DIRECTORY, True)
 
@@ -39,12 +42,22 @@ from sqlalchemy.orm import Session  # noqa: E402
 
 from core.config import get_settings  # noqa: E402
 from dependencies import get_db, get_token_issuer  # noqa: E402
+from integrations.rate_limit import clear_rate_limit_stores  # noqa: E402
 from integrations.security import Argon2PasswordHasher, JwtTokenIssuer  # noqa: E402
 from main import app  # noqa: E402
+from middleware import rate_limit as rate_limit_middleware  # noqa: E402
 from modules.books.data import BookResponse  # noqa: E402
 from modules.departments.data import DepartmentResponse  # noqa: E402
 from modules.users.data import UserResponse  # noqa: E402
 from schema.models import Book, Department, User  # noqa: E402
+from tests.fakes import FakeRateLimitStore  # noqa: E402
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the markers of this project."""
+    config.addinivalue_line(
+        "markers", "postgres_store: uses the real rate limit table"
+    )
 
 
 def run_migrations() -> None:
@@ -83,9 +96,36 @@ def fresh_settings_cache() -> Generator[None, None, None]:
     """Drop the cached settings and token issuer so each test reads the test environment."""
     get_settings.cache_clear()
     get_token_issuer.cache_clear()
+    clear_rate_limit_stores()
     yield
     get_settings.cache_clear()
     get_token_issuer.cache_clear()
+    clear_rate_limit_stores()
+
+
+@pytest.fixture
+def rate_limit_store(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[FakeRateLimitStore, None, None]:
+    """Give the middleware a fake store with a clock that a test can move."""
+    store = FakeRateLimitStore()
+    monkeypatch.setattr(
+        rate_limit_middleware, "build_rate_limit_store", lambda settings: store
+    )
+    yield store
+    store.reset()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limit_state(
+    rate_limit_store: FakeRateLimitStore,
+) -> Generator[None, None, None]:
+    """Start each test with no counters, in the fake store and in the memory store."""
+    clear_rate_limit_stores()
+    rate_limit_store.reset()
+    yield
+    clear_rate_limit_stores()
+    rate_limit_store.reset()
 
 
 @pytest.fixture(scope="session")

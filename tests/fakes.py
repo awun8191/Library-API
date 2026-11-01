@@ -1,10 +1,13 @@
 """In-memory test doubles for the repository and storage contracts."""
+import math
+import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.exc import IntegrityError
 
 from core.exceptions import FileNotFoundException
+from core.repository import RateLimitHit
 from modules.books.data import (
     BookAccessHistoryResponse,
     BookAccessItemResponse,
@@ -306,3 +309,47 @@ class FakeDepartmentRepository:
 
     def get_by_id(self, department_id: int) -> Optional[DepartmentResponse]:
         return self.departments.get(department_id)
+
+
+class FakeRateLimitStore:
+    """Keep rate limit counters in memory and let a test move the clock."""
+
+    def __init__(self) -> None:
+        self.clock: float = time.time()
+        # Each value holds the hit count and the start of its window.
+        self.counters: Dict[str, Tuple[int, float]] = {}
+        self.prune_calls: List[int] = []
+
+    def set_clock(self, value: float) -> None:
+        """Move the clock to a fixed time."""
+        self.clock = value
+
+    def advance(self, seconds: float) -> None:
+        """Move the clock forward."""
+        self.clock += seconds
+
+    def reset(self) -> None:
+        """Forget every counter and start again from the real time."""
+        self.counters.clear()
+        self.prune_calls.clear()
+        self.clock = time.time()
+
+    def increment(self, key: str, window_seconds: int) -> RateLimitHit:
+        window_start = math.floor(self.clock / window_seconds) * window_seconds
+        hits, stored_start = self.counters.get(key, (0, window_start))
+        if stored_start != window_start:
+            hits = 0
+        hits += 1
+        self.counters[key] = (hits, window_start)
+        return RateLimitHit(
+            hits=hits,
+            window_start=datetime.fromtimestamp(window_start, tz=timezone.utc),
+            window_seconds=window_seconds,
+        )
+
+    def prune(self, older_than_seconds: int) -> None:
+        self.prune_calls.append(older_than_seconds)
+        cutoff = self.clock - older_than_seconds
+        stale = [key for key, (_, start) in self.counters.items() if start < cutoff]
+        for key in stale:
+            del self.counters[key]
