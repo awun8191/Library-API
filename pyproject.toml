@@ -16,4 +16,27 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-cov>=6.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "--strict-markers --strict-config"
+filterwarnings = [
+    "error::DeprecationWarning",
+    # Starlette announces a move from httpx to httpx2 in its test client.
+    # The API cannot change that library notice, so keep it out of the report.
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
 ]
