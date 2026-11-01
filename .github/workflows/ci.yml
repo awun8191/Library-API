@@ -44,6 +44,11 @@ jobs:
           uv run python scripts/export_openapi.py
           git diff --exit-code openapi.json
 
+      - name: Check the requirements snapshot
+        run: |
+          uv export --frozen --no-dev --no-hashes --no-emit-project -o requirements.txt
+          git diff --exit-code requirements.txt
+
   test:
     name: Test
     needs: lint

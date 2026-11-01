@@ -333,7 +333,7 @@ Vercel limits that shape the design:
 | No persistent disk | A file written to `STORAGE_DIR` does not survive a redeploy or a cold start. A production file store is a later change |
 | Runtime Python may be below 3.14 | The runtime that Vercel selects can be older than the local version. Check the version in the Vercel project settings before the first deploy |
 
-No `requirements.txt` is committed. The deploy step generates one for the runtime it finds, so the dependency list stays in `pyproject.toml` and `uv.lock`.
+`requirements.txt` is generated from `uv.lock` with `uv export --frozen --no-dev --no-hashes --no-emit-project`. Vercel installs the function dependencies from it, and CI fails when the file and the lock disagree. Regenerate it after a dependency change.
 
 Environment variables for the production project:
 
