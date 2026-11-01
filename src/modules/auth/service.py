@@ -1,5 +1,4 @@
 """Authentication resource business rules and use cases."""
-from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 
@@ -22,7 +21,7 @@ class AuthService:
         repository: AuthRepository,
         hasher: PasswordHasher,
         token_issuer: TokenIssuer,
-        dept_repo: Optional[DepartmentRepository] = None,
+        dept_repo: DepartmentRepository | None = None,
     ):
         self.repository = repository
         self.hasher = hasher
@@ -35,9 +34,12 @@ class AuthService:
         if self.repository.get_credentials_by_email(email) is not None:
             raise UserAlreadyExistsException("An account with this email already exists")
 
-        if payload.department_id is not None and self.dept_repo is not None:
-            if self.dept_repo.get_by_id(payload.department_id) is None:
-                raise DepartmentNotFoundException()
+        if (
+            payload.department_id is not None
+            and self.dept_repo is not None
+            and self.dept_repo.get_by_id(payload.department_id) is None
+        ):
+            raise DepartmentNotFoundException()
 
         try:
             return self.repository.create_user(
@@ -53,7 +55,9 @@ class AuthService:
     def login(self, payload: LoginRequest) -> TokenResponse:
         credentials = self.repository.get_credentials_by_email(str(payload.email))
 
-        if credentials is None or not self.hasher.verify(payload.password, credentials.password_hash):
+        if credentials is None or not self.hasher.verify(
+            payload.password, credentials.password_hash
+        ):
             raise InvalidCredentialsException()
 
         if not credentials.is_active:

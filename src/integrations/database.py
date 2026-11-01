@@ -1,9 +1,9 @@
-from functools import lru_cache
-from typing import Generator
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from core.config import AppSettings, get_settings
+from core.config import get_settings
 
 
 class DatabaseManager:
@@ -17,7 +17,7 @@ class DatabaseManager:
             bind=self.engine,
         )
 
-    def get_session(self) -> Generator[Session, None, None]:
+    def get_session(self) -> Generator[Session]:
         with self.session_factory() as session:
             yield session
 

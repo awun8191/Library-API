@@ -1,7 +1,7 @@
 """Integration tests for the file download and access history endpoints."""
+
 import uuid
 from pathlib import Path
-from typing import Tuple
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
@@ -18,7 +18,7 @@ def store_book(
     content: bytes,
     name: str = "Intro to Algorithms",
     course_code: str = "CSC201",
-) -> Tuple[BookResponse, Path]:
+) -> tuple[BookResponse, Path]:
     """Create a book row with a real PDF on disk and return both."""
     file_path = storage_directory / f"{uuid.uuid4().hex}.pdf"
     file_path.write_bytes(content)
@@ -70,9 +70,7 @@ def test_one_download_records_exactly_one_access(
     assert response.status_code == 200
     db_session.expire_all()
     count = db_session.execute(
-        select(func.count())
-        .select_from(BookAccess)
-        .where(BookAccess.user_id == student.id)
+        select(func.count()).select_from(BookAccess).where(BookAccess.user_id == student.id)
     ).scalar_one()
     assert count == 1
     row = db_session.execute(
@@ -158,9 +156,7 @@ def test_history_returns_only_caller_rows_newest_first(
     assert response.status_code == 200
     items = response.json()["items"]
     assert [item["book_id"] for item in items] == [second_book.id, first_book.id]
-    assert [item["id"] for item in items] == sorted(
-        [item["id"] for item in items], reverse=True
-    )
+    assert [item["id"] for item in items] == sorted([item["id"] for item in items], reverse=True)
 
 
 def test_history_pagination_walks_two_pages(

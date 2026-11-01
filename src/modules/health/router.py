@@ -1,4 +1,5 @@
 """Health resource API routes."""
+
 from fastapi import APIRouter, Response, status
 
 from core.config import AppSettings

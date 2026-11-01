@@ -1,4 +1,5 @@
 """Authentication resource API routes."""
+
 from fastapi import APIRouter, Depends, status
 
 from core.config import AppSettings

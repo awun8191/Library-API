@@ -1,5 +1,6 @@
 """Unit tests for the password hasher and the token issuer."""
-from datetime import datetime, timedelta, timezone
+
+from datetime import UTC, datetime, timedelta
 
 import jwt
 
@@ -22,7 +23,7 @@ def encode_token(payload: dict, secret_key: str = SECRET_KEY) -> str:
 
 def future_time() -> datetime:
     """Return a time in the future."""
-    return datetime.now(timezone.utc) + timedelta(hours=1)
+    return datetime.now(UTC) + timedelta(hours=1)
 
 
 def test_password_hash_accepts_the_original_password():
@@ -58,7 +59,7 @@ def test_issued_token_returns_the_user_id():
 
 def test_expired_token_is_rejected():
     issuer = build_issuer()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     token = encode_token(
         {
             "sub": "7",

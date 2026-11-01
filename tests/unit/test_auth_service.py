@@ -1,5 +1,4 @@
 """Unit tests for the authentication use cases."""
-from typing import Optional
 
 import pytest
 
@@ -24,8 +23,8 @@ def build_issuer() -> JwtTokenIssuer:
 
 def build_service(
     repository: FakeAuthRepository,
-    dept_repo: Optional[FakeDepartmentRepository] = None,
-    issuer: Optional[JwtTokenIssuer] = None,
+    dept_repo: FakeDepartmentRepository | None = None,
+    issuer: JwtTokenIssuer | None = None,
 ) -> AuthService:
     """Build the authentication service on top of the fakes."""
     return AuthService(
@@ -39,7 +38,7 @@ def build_service(
 def build_signup(
     email: str = "ada@school.edu",
     password: str = "strong-password",
-    department_id: Optional[int] = None,
+    department_id: int | None = None,
 ) -> SignupRequest:
     """Build a valid signup request."""
     return SignupRequest(
@@ -96,9 +95,7 @@ def test_login_returns_a_token_for_the_user():
     issuer = build_issuer()
     service = build_service(repository, issuer=issuer)
 
-    token_response = service.login(
-        LoginRequest(email="ada@school.edu", password="strong-password")
-    )
+    token_response = service.login(LoginRequest(email="ada@school.edu", password="strong-password"))
 
     assert token_response.token_type == "bearer"
     assert token_response.expires_in == 3600

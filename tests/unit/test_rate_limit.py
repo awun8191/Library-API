@@ -1,4 +1,5 @@
 """Unit tests for the rate limit rules, the client address, and the stores."""
+
 import pytest
 from starlette.requests import Request
 
@@ -168,9 +169,7 @@ def test_match_rule_ignores_a_trailing_slash() -> None:
 
 
 def test_client_ip_uses_the_last_forwarded_hop() -> None:
-    request = build_request(
-        headers={"X-Forwarded-For": "203.0.113.7, 198.51.100.4, 10.0.0.9"}
-    )
+    request = build_request(headers={"X-Forwarded-For": "203.0.113.7, 198.51.100.4, 10.0.0.9"})
 
     client_ip = resolve_client_ip(request, trust_proxy_headers=True)
 

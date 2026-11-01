@@ -1,7 +1,8 @@
 """Contracts for the infrastructure adapters used by the services."""
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Protocol, Tuple
+from typing import Protocol
 
 
 class FileStorageRepository(Protocol):
@@ -29,11 +30,11 @@ class PasswordHasher(Protocol):
 
 
 class TokenIssuer(Protocol):
-    def issue(self, user_id: int) -> Tuple[str, int]:
+    def issue(self, user_id: int) -> tuple[str, int]:
         """Issue an access token for a user and return it with its lifetime in seconds."""
         ...
 
-    def decode_user_id(self, token: str) -> Optional[int]:
+    def decode_user_id(self, token: str) -> int | None:
         """Return the user id in a valid token, or None when the token is invalid or expired."""
         ...
 

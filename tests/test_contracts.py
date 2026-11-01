@@ -1,4 +1,5 @@
 """Integration tests for the shared error envelope and routing contracts."""
+
 from fastapi.testclient import TestClient
 
 from tests.integration.test_auth import signup_payload
@@ -15,9 +16,7 @@ def test_handled_errors_include_message_and_code(
         client.get("/api/v1/books/987654"),
         client.get("/api/v1/users/me"),
         client.post("/api/v1/auth/signup", json=signup_payload(email="taken@school.edu")),
-        client.patch(
-            "/api/v1/books/987654", json={"name": "Nope"}, headers=auth_headers(student)
-        ),
+        client.patch("/api/v1/books/987654", json={"name": "Nope"}, headers=auth_headers(student)),
     ]
 
     for response in responses:

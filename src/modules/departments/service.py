@@ -1,5 +1,4 @@
 """Department resource business rules and use cases."""
-from typing import List
 
 from core.exceptions import DepartmentNotFoundException
 from modules.departments.data import DepartmentResponse
@@ -10,7 +9,7 @@ class DepartmentService:
     def __init__(self, repository: DepartmentRepository):
         self.repository = repository
 
-    def list_departments(self) -> List[DepartmentResponse]:
+    def list_departments(self) -> list[DepartmentResponse]:
         return self.repository.list_departments()
 
     def get_department(self, department_id: int) -> DepartmentResponse:

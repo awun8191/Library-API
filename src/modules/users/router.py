@@ -1,5 +1,4 @@
 """User resource API routes."""
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -68,7 +67,7 @@ def get_users_router(settings: AppSettings) -> APIRouter:
         },
     )
     def get_my_access_history(
-        cursor: Optional[int] = Query(default=None, description="Cursor from the previous page"),
+        cursor: int | None = Query(default=None, description="Cursor from the previous page"),
         limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
         current_user: UserResponse = Depends(get_current_user),
         service: BookService = Depends(get_book_service),

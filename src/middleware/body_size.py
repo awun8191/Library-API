@@ -4,6 +4,7 @@ Vercel rejects a request body over 4.5 MB before the function runs. The
 application keeps a smaller limit of its own. The middleware compares the
 declared length only. It never reads the body.
 """
+
 from __future__ import annotations
 
 from fastapi import FastAPI

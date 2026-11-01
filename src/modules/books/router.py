@@ -1,5 +1,4 @@
 """Book resource API routes."""
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
 from fastapi.responses import FileResponse
@@ -75,10 +74,10 @@ def get_books_router(settings: AppSettings) -> APIRouter:
         },
     )
     def list_books(
-        q: Optional[str] = Query(default=None, description="Search term for book name"),
-        department_id: Optional[int] = Query(default=None, description="Filter by department ID"),
-        course_code: Optional[str] = Query(default=None, description="Filter by course code"),
-        cursor: Optional[int] = Query(default=None, description="Cursor from the previous page"),
+        q: str | None = Query(default=None, description="Search term for book name"),
+        department_id: int | None = Query(default=None, description="Filter by department ID"),
+        course_code: str | None = Query(default=None, description="Filter by course code"),
+        cursor: int | None = Query(default=None, description="Cursor from the previous page"),
         limit: int = Query(default=10, ge=1, le=100, description="Items per page"),
         service: BookService = Depends(get_book_service),
     ):

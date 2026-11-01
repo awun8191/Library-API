@@ -11,7 +11,9 @@ class AppSettings(BaseSettings):
     api_name: str = "Library API"
     api_version: str = "v1"
     api_prefix: str = API_PREFIX
-    api_description: str = "A simple library API that uses a domain driven architecture for clear separation"
+    api_description: str = (
+        "A simple library API that uses a domain driven architecture for clear separation"
+    )
     api_summary: str = "A simple library API"
     environment: Literal["development", "production"] = "development"
     database_url: str = Field(min_length=1)
@@ -44,6 +46,6 @@ class AppSettings(BaseSettings):
     )
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> AppSettings:
     return AppSettings()

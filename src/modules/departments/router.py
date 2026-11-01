@@ -1,5 +1,5 @@
 """Department resource API routes."""
-from typing import List
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,7 @@ def get_departments_router(settings: AppSettings) -> APIRouter:
 
     @router.get(
         "/departments",
-        response_model=List[DepartmentResponse],
+        response_model=list[DepartmentResponse],
         status_code=status.HTTP_200_OK,
         tags=["Departments"],
         summary="List departments",

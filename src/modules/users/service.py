@@ -1,5 +1,4 @@
 """User resource business rules and use cases."""
-from typing import Optional
 
 from core.exceptions import DepartmentNotFoundException, UserNotFoundException
 from modules.departments.repository import DepartmentRepository
@@ -11,7 +10,7 @@ class UserService:
     def __init__(
         self,
         user_repo: UserRepository,
-        dept_repo: Optional[DepartmentRepository] = None,
+        dept_repo: DepartmentRepository | None = None,
     ):
         self.user_repo = user_repo
         self.dept_repo = dept_repo

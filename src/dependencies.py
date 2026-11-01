@@ -1,15 +1,16 @@
 """Application dependency wiring shared across resource modules."""
+
+from collections.abc import Generator
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, Optional
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from core.config import get_settings
 from core.exceptions import UserForbiddenException, UserNotAuthorizedException
 from core.repository import PasswordHasher, TokenIssuer
-from core.config import get_settings
 from integrations.database import get_db_manager
 from integrations.file_storage import FileStorage
 from integrations.security import Argon2PasswordHasher, JwtTokenIssuer
@@ -25,19 +26,19 @@ from modules.users.service import UserService
 security = HTTPBearer(auto_error=False)
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """Dependency that provides a database session per request."""
     manager = get_db_manager()
     yield from manager.get_session()
 
 
-@lru_cache()
+@lru_cache
 def get_password_hasher() -> PasswordHasher:
     """Return the shared password hasher."""
     return Argon2PasswordHasher()
 
 
-@lru_cache()
+@lru_cache
 def get_token_issuer() -> TokenIssuer:
     """Return the shared access token issuer."""
     settings = get_settings()
@@ -78,7 +79,7 @@ def get_book_service(db: Session = Depends(get_db)) -> BookService:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db),
     token_issuer: TokenIssuer = Depends(get_token_issuer),
 ) -> UserResponse:

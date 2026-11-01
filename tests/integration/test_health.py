@@ -1,4 +1,5 @@
 """Integration tests for the health route."""
+
 import pytest
 from fastapi.testclient import TestClient
 

@@ -1,8 +1,8 @@
 """Unit tests for the book use cases."""
+
 import asyncio
 import hashlib
 import io
-from typing import Optional
 
 import pytest
 from fastapi import UploadFile
@@ -34,10 +34,10 @@ def build_departments(department_id: int = 1) -> FakeDepartmentRepository:
 
 
 def build_service(
-    books: Optional[FakeBookRepository] = None,
-    storage: Optional[FakeFileStorage] = None,
-    departments: Optional[FakeDepartmentRepository] = None,
-    max_upload_bytes: Optional[int] = None,
+    books: FakeBookRepository | None = None,
+    storage: FakeFileStorage | None = None,
+    departments: FakeDepartmentRepository | None = None,
+    max_upload_bytes: int | None = None,
 ) -> BookService:
     """Build the book service on top of the fakes."""
     return BookService(
@@ -196,9 +196,7 @@ def test_update_of_a_missing_book_raises():
 
 def test_upload_over_the_service_limit_raises_and_writes_nothing():
     storage = build_storage()
-    service = build_service(
-        storage=storage, departments=build_departments(), max_upload_bytes=16
-    )
+    service = build_service(storage=storage, departments=build_departments(), max_upload_bytes=16)
 
     with pytest.raises(FileTooLargeException) as error:
         upload(service)

@@ -1,6 +1,7 @@
 """Integration tests for the request identifier middleware."""
+
 import re
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,10 +16,10 @@ GENERATED_ID = re.compile(r"^[0-9a-f]{32}$")
 
 
 @pytest.fixture
-def failing_client(db_session: Session) -> Generator[TestClient, None, None]:
+def failing_client(db_session: Session) -> Generator[TestClient]:
     """Build a client that returns the 500 response instead of raising it."""
 
-    def override_get_db() -> Generator[Session, None, None]:
+    def override_get_db() -> Generator[Session]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
@@ -36,9 +37,7 @@ def test_a_normal_response_carries_a_generated_id(client: TestClient) -> None:
 
 
 def test_a_valid_incoming_id_is_echoed(client: TestClient) -> None:
-    response = client.get(
-        "/api/v1/departments", headers={"X-Request-ID": "client.abc_123-XYZ"}
-    )
+    response = client.get("/api/v1/departments", headers={"X-Request-ID": "client.abc_123-XYZ"})
 
     assert response.headers["X-Request-ID"] == "client.abc_123-XYZ"
 

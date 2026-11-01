@@ -4,11 +4,13 @@ The middleware counts the requests of each client on each rule. The store owns
 the window. The settings and the store are read on each request, so a test can
 change them at runtime.
 """
+
 from __future__ import annotations
 
+import contextlib
 import math
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI, Request, status
 from starlette.concurrency import run_in_threadpool
@@ -103,9 +105,9 @@ def _seconds_until_window_end(hit: RateLimitHit) -> int:
     """Return the whole seconds left in the window of a hit. The value is at least 0."""
     window_start = hit.window_start
     if window_start.tzinfo is None:
-        window_start = window_start.replace(tzinfo=timezone.utc)
+        window_start = window_start.replace(tzinfo=UTC)
     window_end = window_start + timedelta(seconds=hit.window_seconds)
-    seconds_left = (window_end - datetime.now(timezone.utc)).total_seconds()
+    seconds_left = (window_end - datetime.now(UTC)).total_seconds()
     return max(0, math.ceil(seconds_left))
 
 
@@ -133,14 +135,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         store = build_rate_limit_store(settings)
 
         # The increment must fail loudly. A silent skip would remove the limit.
-        hit = await run_in_threadpool(store.increment, f"{rule.name}:{client_ip}", rule.window_seconds)
+        hit = await run_in_threadpool(
+            store.increment, f"{rule.name}:{client_ip}", rule.window_seconds
+        )
 
         if hit.hits == 1:
-            try:
+            # A prune failure must not fail the request. The next hit tries again.
+            with contextlib.suppress(Exception):
                 await run_in_threadpool(store.prune, PRUNE_OLDER_THAN_SECONDS)
-            except Exception:
-                # A prune failure must not fail the request. The next hit tries again.
-                pass
 
         reset_seconds = _seconds_until_window_end(hit)
         headers = _rate_limit_headers(limit, hit, reset_seconds)

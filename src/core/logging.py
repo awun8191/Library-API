@@ -3,12 +3,13 @@
 The formatter writes one JSON object per line when the application runs in
 production. A local run gets one short text line instead.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from core.config import AppSettings
 
@@ -29,7 +30,7 @@ def _current_request_id() -> str:
 
 def _format_timestamp(record: logging.LogRecord) -> str:
     """Return the record time as an ISO 8601 string in UTC."""
-    moment = datetime.fromtimestamp(record.created, tz=timezone.utc)
+    moment = datetime.fromtimestamp(record.created, tz=UTC)
     return moment.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 

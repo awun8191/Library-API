@@ -1,6 +1,6 @@
 """Book resource business rules, orchestration, and use cases."""
+
 import hashlib
-from typing import Optional, Tuple
 
 from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
@@ -31,8 +31,8 @@ class BookService:
         self,
         book_repo: BookRepository,
         file_storage: FileStorageRepository,
-        dept_repo: Optional[DepartmentRepository] = None,
-        max_upload_bytes: Optional[int] = None,
+        dept_repo: DepartmentRepository | None = None,
+        max_upload_bytes: int | None = None,
     ):
         self.book_repo = book_repo
         self.file_storage = file_storage
@@ -92,7 +92,7 @@ class BookService:
             raise BookNotFoundException()
         return book
 
-    def open_book(self, book_id: int, user_id: int) -> Tuple[str, BookResponse]:
+    def open_book(self, book_id: int, user_id: int) -> tuple[str, BookResponse]:
         """Record the access and return the stored path with the book details."""
         book = self.book_repo.read_book(book_id)
         if not book:
@@ -125,10 +125,10 @@ class BookService:
 
     def list_books(
         self,
-        q: Optional[str] = None,
-        department_id: Optional[int] = None,
-        course_code: Optional[str] = None,
-        cursor: Optional[int] = None,
+        q: str | None = None,
+        department_id: int | None = None,
+        course_code: str | None = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookListResponse:
         return self.book_repo.list_books(
@@ -142,7 +142,7 @@ class BookService:
     def get_user_access_history(
         self,
         user_id: int,
-        cursor: Optional[int] = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookAccessHistoryResponse:
         return self.book_repo.get_user_access_history(

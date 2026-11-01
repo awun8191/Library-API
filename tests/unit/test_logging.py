@@ -1,8 +1,9 @@
 """Unit tests for the log formatters and the log setup."""
+
 import json
 import logging
+from collections.abc import Generator
 from datetime import datetime
-from typing import Generator
 
 import pytest
 
@@ -44,7 +45,7 @@ def app_handlers() -> list[logging.Handler]:
 
 
 @pytest.fixture
-def restore_logging() -> Generator[None, None, None]:
+def restore_logging() -> Generator[None]:
     """Put the application log setup back after a test that changes it."""
     root = logging.getLogger()
     level = root.level

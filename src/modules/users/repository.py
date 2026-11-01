@@ -1,5 +1,6 @@
 """User resource persistence contracts and queries."""
-from typing import Optional, Protocol
+
+from typing import Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,11 +10,11 @@ from schema.models import User
 
 
 class UserRepository(Protocol):
-    def get_by_id(self, user_id: int) -> Optional[UserResponse]:
+    def get_by_id(self, user_id: int) -> UserResponse | None:
         """Fetch user by ID."""
         ...
 
-    def update_user(self, user_id: int, payload: UserUpdateRequest) -> Optional[UserResponse]:
+    def update_user(self, user_id: int, payload: UserUpdateRequest) -> UserResponse | None:
         """Update user profile fields."""
         ...
 
@@ -24,14 +25,14 @@ class SqlAlchemyUserRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_id(self, user_id: int) -> Optional[UserResponse]:
+    def get_by_id(self, user_id: int) -> UserResponse | None:
         stmt = select(User).where(User.id == user_id)
         user = self.session.execute(stmt).scalar_one_or_none()
         if not user:
             return None
         return UserResponse.model_validate(user)
 
-    def update_user(self, user_id: int, payload: UserUpdateRequest) -> Optional[UserResponse]:
+    def update_user(self, user_id: int, payload: UserUpdateRequest) -> UserResponse | None:
         stmt = select(User).where(User.id == user_id)
         user = self.session.execute(stmt).scalar_one_or_none()
         if not user:

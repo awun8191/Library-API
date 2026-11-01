@@ -1,5 +1,6 @@
 """Authentication resource persistence contracts and queries."""
-from typing import Optional, Protocol
+
+from typing import Protocol
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -11,7 +12,7 @@ from schema.models import User
 class AuthRepository(Protocol):
     """Account lookup and creation contract."""
 
-    def get_credentials_by_email(self, email: str) -> Optional[UserCredentials]:
+    def get_credentials_by_email(self, email: str) -> UserCredentials | None:
         """Fetch a user record with its password hash."""
         ...
 
@@ -21,7 +22,7 @@ class AuthRepository(Protocol):
         last_name: str,
         email: str,
         password_hash: str,
-        department_id: Optional[int] = None,
+        department_id: int | None = None,
     ) -> UserResponse:
         """Persist a new account and return its public fields."""
         ...
@@ -33,7 +34,7 @@ class SqlAlchemyAuthRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_credentials_by_email(self, email: str) -> Optional[UserCredentials]:
+    def get_credentials_by_email(self, email: str) -> UserCredentials | None:
         stmt = select(User).where(func.lower(User.email) == email.strip().lower())
         user = self.session.execute(stmt).scalar_one_or_none()
         if not user:
@@ -46,7 +47,7 @@ class SqlAlchemyAuthRepository:
         last_name: str,
         email: str,
         password_hash: str,
-        department_id: Optional[int] = None,
+        department_id: int | None = None,
     ) -> UserResponse:
         user = User(
             first_name=first_name,

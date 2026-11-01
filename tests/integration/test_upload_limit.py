@@ -1,4 +1,5 @@
 """Integration tests for the upload size limit."""
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select

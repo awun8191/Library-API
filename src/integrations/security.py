@@ -1,6 +1,6 @@
 """Password hashing and access token adapters."""
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
+
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from argon2 import PasswordHasher as Argon2Hasher
@@ -19,7 +19,7 @@ class Argon2PasswordHasher:
     def verify(self, password: str, password_hash: str) -> bool:
         try:
             return self._hasher.verify(password_hash, password)
-        except (VerifyMismatchError, VerificationError, InvalidHashError):
+        except VerifyMismatchError, VerificationError, InvalidHashError:
             return False
 
 
@@ -31,14 +31,14 @@ class JwtTokenIssuer:
         self.algorithm = algorithm
         self.expire_minutes = expire_minutes
 
-    def issue(self, user_id: int) -> Tuple[str, int]:
-        now = datetime.now(timezone.utc)
+    def issue(self, user_id: int) -> tuple[str, int]:
+        now = datetime.now(UTC)
         expires_at = now + timedelta(minutes=self.expire_minutes)
         payload = {"sub": str(user_id), "iat": now, "exp": expires_at, "iss": "library-api"}
         token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
         return token, self.expire_minutes * 60
 
-    def decode_user_id(self, token: str) -> Optional[int]:
+    def decode_user_id(self, token: str) -> int | None:
         try:
             payload = jwt.decode(
                 token,
@@ -51,5 +51,5 @@ class JwtTokenIssuer:
 
         try:
             return int(payload["sub"])
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             return None

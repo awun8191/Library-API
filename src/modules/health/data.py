@@ -1,4 +1,5 @@
 """Health resource data models and schemas."""
+
 from typing import Literal
 
 from pydantic import BaseModel

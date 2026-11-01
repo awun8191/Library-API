@@ -1,4 +1,5 @@
 """Integration tests for the rate limit middleware."""
+
 import uuid
 
 import pytest
@@ -90,9 +91,7 @@ def test_the_rate_limited_body_holds_only_the_message_and_the_code(
 def test_two_real_ip_values_have_separate_counters(
     client: TestClient, make_user, monkeypatch, rate_limit_store
 ) -> None:
-    configure_rate_limit(
-        monkeypatch, TRUST_PROXY_HEADERS="true", RATE_LIMIT_LOGIN_PER_MINUTE="1"
-    )
+    configure_rate_limit(monkeypatch, TRUST_PROXY_HEADERS="true", RATE_LIMIT_LOGIN_PER_MINUTE="1")
     make_user(email="limit@school.edu", password=DEFAULT_PASSWORD)
 
     first = login(client, "limit@school.edu", headers={"X-Real-IP": "203.0.113.5"})
@@ -150,9 +149,7 @@ def test_a_lowered_default_limit_blocks_the_next_get(
     assert third.status_code == 429
 
 
-def test_a_disabled_limiter_never_blocks(
-    client: TestClient, monkeypatch, rate_limit_store
-) -> None:
+def test_a_disabled_limiter_never_blocks(client: TestClient, monkeypatch, rate_limit_store) -> None:
     configure_rate_limit(monkeypatch, enabled=False, RATE_LIMIT_DEFAULT_PER_MINUTE="1")
 
     responses = [client.get(BOOKS_URL) for _ in range(4)]
@@ -213,19 +210,18 @@ def test_the_postgres_store_counts_and_prunes_in_the_test_database(db_engine) ->
         store.prune(86400)
 
         with db_engine.begin() as connection:
-            stored = connection.execute(
-                text(
-                    "SELECT key FROM rate_limit_counters "
-                    "WHERE key IN (:key, :old_key)"
-                ),
-                {"key": key, "old_key": old_key},
-            ).scalars().all()
+            stored = (
+                connection.execute(
+                    text("SELECT key FROM rate_limit_counters WHERE key IN (:key, :old_key)"),
+                    {"key": key, "old_key": old_key},
+                )
+                .scalars()
+                .all()
+            )
         assert stored == [key]
     finally:
         with db_engine.begin() as connection:
             connection.execute(
-                text(
-                    "DELETE FROM rate_limit_counters WHERE key IN (:key, :old_key)"
-                ),
+                text("DELETE FROM rate_limit_counters WHERE key IN (:key, :old_key)"),
                 {"key": key, "old_key": old_key},
             )

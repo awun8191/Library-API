@@ -4,14 +4,15 @@ The stores keep one counter for each key and each window. The window math is
 shared. A window starts at the floor of the current time divided by the window
 length.
 """
+
 from __future__ import annotations
 
 import math
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
-from typing import Callable, Dict, Tuple
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
@@ -58,9 +59,7 @@ class PostgresRateLimitStore:
     def increment(self, key: str, window_seconds: int) -> RateLimitHit:
         """Add one hit with one atomic upsert and return the new counter state."""
         with self._session_factory() as session:
-            row = session.execute(
-                INCREMENT_SQL, {"key": key, "window": window_seconds}
-            ).one()
+            row = session.execute(INCREMENT_SQL, {"key": key, "window": window_seconds}).one()
             session.commit()
 
         return RateLimitHit(
@@ -71,7 +70,7 @@ class PostgresRateLimitStore:
 
     def prune(self, older_than_seconds: int) -> None:
         """Delete the counters whose window started before the cutoff."""
-        cutoff = datetime.now(timezone.utc) - timedelta(seconds=older_than_seconds)
+        cutoff = datetime.now(UTC) - timedelta(seconds=older_than_seconds)
         with self._session_factory() as session:
             session.execute(PRUNE_SQL, {"cutoff": cutoff})
             session.commit()
@@ -84,7 +83,7 @@ class MemoryRateLimitStore:
         self._now = now
         self._lock = threading.Lock()
         # Each value holds the hit count and the start of its window.
-        self._counters: Dict[str, Tuple[int, float]] = {}
+        self._counters: dict[str, tuple[int, float]] = {}
 
     def increment(self, key: str, window_seconds: int) -> RateLimitHit:
         """Add one hit to the counter of the key and return the new state."""
@@ -99,7 +98,7 @@ class MemoryRateLimitStore:
 
         return RateLimitHit(
             hits=hits,
-            window_start=datetime.fromtimestamp(window_start, tz=timezone.utc),
+            window_start=datetime.fromtimestamp(window_start, tz=UTC),
             window_seconds=window_seconds,
         )
 
@@ -117,13 +116,13 @@ class MemoryRateLimitStore:
             self._counters.clear()
 
 
-@lru_cache()
+@lru_cache
 def _memory_store() -> MemoryRateLimitStore:
     """Return the one memory store of this process."""
     return MemoryRateLimitStore()
 
 
-@lru_cache()
+@lru_cache
 def _postgres_store() -> PostgresRateLimitStore:
     """Return the one database store of this process."""
     return PostgresRateLimitStore(get_db_manager().session_factory)

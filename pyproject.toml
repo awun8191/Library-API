@@ -17,6 +17,41 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
+    "ruff>=0.9.0",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+# Migrations are generated files. The scripts belong to another work stream.
+exclude = ["migrations", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI reads the dependency markers from the argument defaults.
+extend-immutable-calls = [
+    "fastapi.Body",
+    "fastapi.Depends",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Query",
+    "fastapi.Security",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "core",
+    "dependencies",
+    "integrations",
+    "middleware",
+    "modules",
+    "schema",
+    "tests",
 ]
 
 [tool.pytest.ini_options]

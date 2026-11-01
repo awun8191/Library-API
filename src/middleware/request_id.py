@@ -3,6 +3,7 @@
 The middleware gives each request one identifier. A log line and an error
 response can then point to the same request.
 """
+
 from __future__ import annotations
 
 import re

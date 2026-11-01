@@ -1,4 +1,5 @@
 """Integration tests for the signup and login endpoints."""
+
 import uuid
 
 import jwt
@@ -38,9 +39,7 @@ def signup_payload(**overrides) -> dict:
     return payload
 
 
-def test_signup_returns_201_with_public_fields_only(
-    client: TestClient, make_department
-) -> None:
+def test_signup_returns_201_with_public_fields_only(client: TestClient, make_department) -> None:
     department = make_department(name="Computer Science")
 
     response = client.post(SIGNUP_URL, json=signup_payload(department_id=department.id))
@@ -56,9 +55,7 @@ def test_signup_returns_201_with_public_fields_only(
     assert "password_hash" not in body
 
 
-def test_signup_with_a_duplicate_email_returns_409(
-    client: TestClient, make_user
-) -> None:
+def test_signup_with_a_duplicate_email_returns_409(client: TestClient, make_user) -> None:
     make_user(email="ada@school.edu")
 
     response = client.post(SIGNUP_URL, json=signup_payload(email="ada@school.edu"))
@@ -99,9 +96,7 @@ def test_signup_with_an_unknown_department_returns_404(client: TestClient) -> No
     assert body["message"] == "Department not found"
 
 
-def test_signup_stores_an_argon2_hash_not_the_password(
-    client: TestClient, db_session
-) -> None:
+def test_signup_stores_an_argon2_hash_not_the_password(client: TestClient, db_session) -> None:
     payload = signup_payload(email="hash-check@school.edu")
 
     response = client.post(SIGNUP_URL, json=payload)
@@ -132,9 +127,7 @@ def test_login_returns_a_token_response(client: TestClient, make_user) -> None:
     assert body["expires_in"] == 3600
 
 
-def test_login_with_a_wrong_password_returns_401(
-    client: TestClient, make_user
-) -> None:
+def test_login_with_a_wrong_password_returns_401(client: TestClient, make_user) -> None:
     make_user(email="login@school.edu", password=DEFAULT_PASSWORD)
 
     response = client.post(
@@ -148,9 +141,7 @@ def test_login_with_a_wrong_password_returns_401(
     assert body["message"] == "Invalid email or password"
 
 
-def test_login_with_an_unknown_email_returns_the_same_401(
-    client: TestClient, make_user
-) -> None:
+def test_login_with_an_unknown_email_returns_the_same_401(client: TestClient, make_user) -> None:
     make_user(email="known@school.edu", password=DEFAULT_PASSWORD)
 
     response = client.post(
@@ -164,9 +155,7 @@ def test_login_with_an_unknown_email_returns_the_same_401(
     assert body["message"] == "Invalid email or password"
 
 
-def test_login_on_an_inactive_account_returns_403(
-    client: TestClient, make_user
-) -> None:
+def test_login_on_an_inactive_account_returns_403(client: TestClient, make_user) -> None:
     make_user(email="inactive@school.edu", password=DEFAULT_PASSWORD, is_active=False)
 
     response = client.post(
@@ -181,9 +170,7 @@ def test_login_on_an_inactive_account_returns_403(
 
 def test_login_token_reads_the_profile(client: TestClient, make_user) -> None:
     user = make_user(email="token@school.edu", password=DEFAULT_PASSWORD)
-    login = client.post(
-        LOGIN_URL, json={"email": "token@school.edu", "password": DEFAULT_PASSWORD}
-    )
+    login = client.post(LOGIN_URL, json={"email": "token@school.edu", "password": DEFAULT_PASSWORD})
     token = login.json()["access_token"]
 
     response = client.get(ME_URL, headers={"Authorization": f"Bearer {token}"})
@@ -192,9 +179,7 @@ def test_login_token_reads_the_profile(client: TestClient, make_user) -> None:
     assert response.json()["id"] == user.id
 
 
-def test_token_signed_with_another_key_returns_401(
-    client: TestClient, make_user
-) -> None:
+def test_token_signed_with_another_key_returns_401(client: TestClient, make_user) -> None:
     user = make_user()
     other_issuer = JwtTokenIssuer(
         secret_key="another-secret-key-that-the-api-does-not-know-0001",
@@ -210,4 +195,4 @@ def test_token_signed_with_another_key_returns_401(
     body = response.json()
     assert body["code"] == "UNAUTHENTICATED"
     assert jwt.decode(token, options={"verify_signature": False})["sub"] == str(user.id)
-    assert TEST_SECRET_KEY != other_issuer.secret_key
+    assert other_issuer.secret_key != TEST_SECRET_KEY

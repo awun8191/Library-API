@@ -1,4 +1,5 @@
 """Integration tests for the book listing, search, filter, and pagination rules."""
+
 from fastapi.testclient import TestClient
 
 BOOKS_URL = "/api/v1/books"
@@ -78,9 +79,7 @@ def test_combined_filters_return_the_intersection(
 ) -> None:
     wanted = make_department(name="Computer Science")
     other = make_department(name="Mathematics")
-    match = make_book(
-        name="Intro to Algorithms", course_code="CSC201", department_id=wanted.id
-    )
+    match = make_book(name="Intro to Algorithms", course_code="CSC201", department_id=wanted.id)
     make_book(name="Intro to Algorithms", course_code="CSC201", department_id=other.id)
     make_book(name="Linear Algebra", course_code="MTH101", department_id=wanted.id)
 
@@ -108,8 +107,7 @@ def test_pagination_walk_returns_every_id_once_in_ascending_order(
     client: TestClient, make_book
 ) -> None:
     created = [
-        make_book(name=f"Book {index}", course_code=f"CSC10{index}").id
-        for index in range(3)
+        make_book(name=f"Book {index}", course_code=f"CSC10{index}").id for index in range(3)
     ]
 
     collected = []
@@ -153,9 +151,7 @@ def test_limit_bounds_return_400(client: TestClient) -> None:
         assert [error["field"] for error in body["errors"]] == ["limit"]
 
 
-def test_a_cursor_beyond_the_last_id_returns_an_empty_page(
-    client: TestClient, make_book
-) -> None:
+def test_a_cursor_beyond_the_last_id_returns_an_empty_page(client: TestClient, make_book) -> None:
     book = make_book()
 
     response = list_books(client, cursor=book.id + 1000)

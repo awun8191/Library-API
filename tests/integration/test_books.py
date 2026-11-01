@@ -1,4 +1,5 @@
 """Integration tests for the book upload, read, update, and delete endpoints."""
+
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -38,9 +39,7 @@ def upload_book(
 def stored_file_path(db_session, book_id: int) -> str:
     """Read the stored file path of a book from the database."""
     db_session.expire_all()
-    return db_session.execute(
-        select(Book.file_path).where(Book.id == book_id)
-    ).scalar_one()
+    return db_session.execute(select(Book.file_path).where(Book.id == book_id)).scalar_one()
 
 
 def test_admin_upload_returns_201_with_file_url(
@@ -49,9 +48,7 @@ def test_admin_upload_returns_201_with_file_url(
     admin = make_user(role="admin")
     department = make_department(name="Computer Science")
 
-    response = upload_book(
-        client, auth_headers(admin), department.id, make_pdf("upload-ok")
-    )
+    response = upload_book(client, auth_headers(admin), department.id, make_pdf("upload-ok"))
 
     assert response.status_code == 201
     body = response.json()
@@ -69,9 +66,7 @@ def test_student_upload_returns_403(
     student = make_user(role="user")
     department = make_department()
 
-    response = upload_book(
-        client, auth_headers(student), department.id, make_pdf("student-upload")
-    )
+    response = upload_book(client, auth_headers(student), department.id, make_pdf("student-upload"))
 
     assert response.status_code == 403
     body = response.json()
@@ -79,9 +74,7 @@ def test_student_upload_returns_403(
     assert body["message"] == "Admin access required"
 
 
-def test_upload_without_a_token_returns_401(
-    client: TestClient, make_department, make_pdf
-) -> None:
+def test_upload_without_a_token_returns_401(client: TestClient, make_department, make_pdf) -> None:
     department = make_department()
 
     response = upload_book(client, {}, department.id, make_pdf("no-token"))
@@ -96,9 +89,7 @@ def test_upload_of_a_non_pdf_returns_400(
     admin = make_user(role="admin")
     department = make_department()
 
-    response = upload_book(
-        client, auth_headers(admin), department.id, b"not a pdf at all"
-    )
+    response = upload_book(client, auth_headers(admin), department.id, b"not a pdf at all")
 
     assert response.status_code == 400
     body = response.json()
@@ -127,9 +118,7 @@ def test_duplicate_upload_returns_409_and_names_the_existing_book(
     content = make_pdf("duplicate")
     upload_book(client, auth_headers(admin), department.id, content, name="First Copy")
 
-    response = upload_book(
-        client, auth_headers(admin), department.id, content, name="Second Copy"
-    )
+    response = upload_book(client, auth_headers(admin), department.id, content, name="Second Copy")
 
     assert response.status_code == 409
     body = response.json()
@@ -137,9 +126,7 @@ def test_duplicate_upload_returns_409_and_names_the_existing_book(
     assert "First Copy" in body["message"]
 
 
-def test_get_book_returns_the_book(
-    client: TestClient, make_book, make_department
-) -> None:
+def test_get_book_returns_the_book(client: TestClient, make_book, make_department) -> None:
     department = make_department()
     book = make_book(name="Linear Algebra", department_id=department.id)
 
@@ -166,9 +153,7 @@ def test_delete_removes_the_row_and_the_stored_file(
 ) -> None:
     admin = make_user(role="admin")
     department = make_department()
-    upload = upload_book(
-        client, auth_headers(admin), department.id, make_pdf("delete-me")
-    )
+    upload = upload_book(client, auth_headers(admin), department.id, make_pdf("delete-me"))
     book_id = upload.json()["id"]
     file_path = Path(stored_file_path(db_session, book_id))
     assert file_path.is_file()
@@ -182,9 +167,7 @@ def test_delete_removes_the_row_and_the_stored_file(
     assert db_session.execute(select(Book).where(Book.id == book_id)).scalar_one_or_none() is None
 
 
-def test_delete_unknown_book_returns_404(
-    client: TestClient, make_user, auth_headers
-) -> None:
+def test_delete_unknown_book_returns_404(client: TestClient, make_user, auth_headers) -> None:
     admin = make_user(role="admin")
 
     response = client.delete(f"{BOOKS_URL}/987654", headers=auth_headers(admin))
@@ -228,9 +211,7 @@ def test_patch_by_a_student_returns_403(
     assert response.json()["code"] == "FORBIDDEN"
 
 
-def test_patch_unknown_book_returns_404(
-    client: TestClient, make_user, auth_headers
-) -> None:
+def test_patch_unknown_book_returns_404(client: TestClient, make_user, auth_headers) -> None:
     admin = make_user(role="admin")
 
     response = client.patch(

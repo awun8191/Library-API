@@ -1,6 +1,5 @@
 #  ------------------------    BASE EXCEPTION   --------------------------------
 import logging
-from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,17 +9,16 @@ logger = logging.getLogger(__name__)
 
 
 class AppException(Exception):
-
     message: str = "An unexpected error occurred"
     status_code: int = 500
     code: str = "INTERNAL_ERROR"
-    headers: Optional[dict[str, str]] = None
+    headers: dict[str, str] | None = None
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        status_code: Optional[int] = None,
-        headers: Optional[dict[str, str]] = None,
+        message: str | None = None,
+        status_code: int | None = None,
+        headers: dict[str, str] | None = None,
     ):
         if message is not None:
             self.message = message
@@ -30,85 +28,101 @@ class AppException(Exception):
             self.headers = headers
         super().__init__(self.message)
 
+
 # =======================   FILE EXCEPTIONS -----------------------------------------
+
 
 class FileUploadException(AppException):
     message: str = "File upload failed"
     status_code: int = 400
     code: str = "FILE_UPLOAD_FAILED"
 
+
 class FileNotFoundException(AppException):
     message: str = "File not found in storage"
     status_code: int = 404
     code: str = "FILE_NOT_FOUND"
+
 
 class DuplicateFileException(AppException):
     message: str = "Duplicate file: this document has already been uploaded"
     status_code: int = 409
     code: str = "DUPLICATE_FILE"
 
+
 class FileTooLargeException(AppException):
     message: str = "File too large: the upload limit is exceeded"
     status_code: int = 413
     code: str = "FILE_TOO_LARGE"
 
+
 # ------------------------   USER EXCEPTIONS -----------------------------------------
+
 
 class UserAlreadyExistsException(AppException):
     message: str = "User already exists"
     status_code: int = 409
     code: str = "USER_ALREADY_EXISTS"
 
+
 class UserNotFoundException(AppException):
     message: str = "User not found"
     status_code: int = 404
     code: str = "USER_NOT_FOUND"
+
 
 class UserNotAuthorizedException(AppException):
     message: str = "User not authorized"
     status_code: int = 401
     code: str = "UNAUTHENTICATED"
 
-    def __init__(self, message: Optional[str] = None, **kwargs):
+    def __init__(self, message: str | None = None, **kwargs):
         super().__init__(message=message, headers={"WWW-Authenticate": "Bearer"}, **kwargs)
+
 
 class UserForbiddenException(AppException):
     message: str = "Forbidden: insufficient permissions"
     status_code: int = 403
     code: str = "FORBIDDEN"
 
+
 class InvalidCredentialsException(AppException):
     message: str = "Invalid email or password"
     status_code: int = 401
     code: str = "INVALID_CREDENTIALS"
 
-    def __init__(self, message: Optional[str] = None, **kwargs):
+    def __init__(self, message: str | None = None, **kwargs):
         super().__init__(message=message, headers={"WWW-Authenticate": "Bearer"}, **kwargs)
+
 
 class UserAccountCreationException(AppException):
     message: str = "User account creation failed"
     status_code: int = 400
     code: str = "USER_CREATION_FAILED"
 
+
 # ------------------------   BOOK & DEPARTMENT EXCEPTIONS ----------------------------
+
 
 class BookNotFoundException(AppException):
     message: str = "Book not found"
     status_code: int = 404
     code: str = "BOOK_NOT_FOUND"
 
+
 class DepartmentNotFoundException(AppException):
     message: str = "Department not found"
     status_code: int = 404
     code: str = "DEPARTMENT_NOT_FOUND"
 
+
 # ------------------------   RATE LIMIT EXCEPTIONS -----------------------------------
+
 
 class RateLimitedException(AppException):
     message: str = "Too many requests. Try again later."
     status_code: int = 429
     code: str = "RATE_LIMITED"
-
 
 
 def register_exception_handler(app: FastAPI):
@@ -126,14 +140,22 @@ def register_exception_handler(app: FastAPI):
         """Return 400 (not FastAPI's default 422) for invalid input, with field-level details."""
         errors = [
             {
-                "field": ".".join(str(part) for part in err.get("loc", []) if part not in ("body", "query", "path")),
+                "field": ".".join(
+                    str(part)
+                    for part in err.get("loc", [])
+                    if part not in ("body", "query", "path")
+                ),
                 "error": err.get("msg"),
             }
             for err in exc.errors()
         ]
         return JSONResponse(
             status_code=400,
-            content={"message": "Invalid request data", "code": "INVALID_REQUEST", "errors": errors},
+            content={
+                "message": "Invalid request data",
+                "code": "INVALID_REQUEST",
+                "errors": errors,
+            },
         )
 
     @app.exception_handler(Exception)

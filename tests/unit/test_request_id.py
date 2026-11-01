@@ -1,4 +1,5 @@
 """Unit tests for the request identifier policy."""
+
 from middleware.request_id import get_request_id, is_valid_request_id
 
 

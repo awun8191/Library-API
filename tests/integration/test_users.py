@@ -1,5 +1,6 @@
 """Integration tests for the current user profile endpoints."""
-from datetime import datetime, timedelta, timezone
+
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi.testclient import TestClient
@@ -11,9 +12,7 @@ from tests.conftest import TEST_SECRET_KEY
 ME_URL = "/api/v1/users/me"
 
 
-def test_get_me_returns_the_caller_profile(
-    client: TestClient, make_user, auth_headers
-) -> None:
+def test_get_me_returns_the_caller_profile(client: TestClient, make_user, auth_headers) -> None:
     user = make_user(first_name="Grace", last_name="Hopper", email="grace@school.edu")
 
     response = client.get(ME_URL, headers=auth_headers(user))
@@ -37,11 +36,9 @@ def test_get_me_without_a_token_returns_401(client: TestClient) -> None:
     assert body["message"] == "Authentication token is missing"
 
 
-def test_get_me_with_an_expired_token_returns_401(
-    client: TestClient, make_user
-) -> None:
+def test_get_me_with_an_expired_token_returns_401(client: TestClient, make_user) -> None:
     user = make_user()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expired = jwt.encode(
         {
             "sub": str(user.id),
@@ -88,9 +85,7 @@ def test_patch_me_with_an_unknown_department_returns_404(
 ) -> None:
     user = make_user()
 
-    response = client.patch(
-        ME_URL, json={"department_id": 987654}, headers=auth_headers(user)
-    )
+    response = client.patch(ME_URL, json={"department_id": 987654}, headers=auth_headers(user))
 
     assert response.status_code == 404
     body = response.json()
@@ -127,9 +122,11 @@ def test_patch_me_always_resolves_the_token_subject(
     assert response.json()["first_name"] == "Mallory"
 
     db_session.expire_all()
-    rows = db_session.execute(
-        select(User).where(User.id.in_([caller.id, other.id])).order_by(User.id)
-    ).scalars().all()
+    rows = (
+        db_session.execute(select(User).where(User.id.in_([caller.id, other.id])).order_by(User.id))
+        .scalars()
+        .all()
+    )
     changed = {row.id: row.first_name for row in rows}
     assert changed[caller.id] == "Mallory"
     assert changed[other.id] == "Grace"

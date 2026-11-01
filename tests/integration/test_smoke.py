@@ -1,4 +1,5 @@
 """Integration tests that prove the test harness works."""
+
 from fastapi.testclient import TestClient
 
 

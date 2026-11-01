@@ -1,5 +1,6 @@
 """Book resource persistence contracts and queries."""
-from typing import Optional, Protocol
+
+from typing import Protocol
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -37,32 +38,32 @@ class BookRepository(Protocol):
         """Persist a new book record."""
         ...
 
-    def read_book(self, book_id: int) -> Optional[BookResponse]:
+    def read_book(self, book_id: int) -> BookResponse | None:
         """Fetch a single book by ID."""
         ...
 
-    def read_file_path(self, book_id: int) -> Optional[str]:
+    def read_file_path(self, book_id: int) -> str | None:
         """Fetch the stored file path of a book."""
         ...
 
-    def find_by_file_hash(self, file_hash: str) -> Optional[BookResponse]:
+    def find_by_file_hash(self, file_hash: str) -> BookResponse | None:
         """Fetch the book that already uses a file hash."""
         ...
 
-    def update_book(self, book_id: int, payload: BookUpdateRequest) -> Optional[BookResponse]:
+    def update_book(self, book_id: int, payload: BookUpdateRequest) -> BookResponse | None:
         """Update an existing book record."""
         ...
 
-    def delete_book(self, book_id: int) -> Optional[str]:
+    def delete_book(self, book_id: int) -> str | None:
         """Delete a book record and return its file_path if found, or None."""
         ...
 
     def list_books(
         self,
-        q: Optional[str] = None,
-        department_id: Optional[int] = None,
-        course_code: Optional[str] = None,
-        cursor: Optional[int] = None,
+        q: str | None = None,
+        department_id: int | None = None,
+        course_code: str | None = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookListResponse:
         """List books with search, filters, and cursor-based pagination."""
@@ -75,7 +76,7 @@ class BookRepository(Protocol):
     def get_user_access_history(
         self,
         user_id: int,
-        cursor: Optional[int] = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookAccessHistoryResponse:
         """Retrieve paginated reading history for a user."""
@@ -119,25 +120,25 @@ class SqlAlchemyBookRepository:
         self.session.refresh(book)
         return BookResponse.model_validate(book)
 
-    def read_book(self, book_id: int) -> Optional[BookResponse]:
+    def read_book(self, book_id: int) -> BookResponse | None:
         stmt = select(Book).where(Book.id == book_id)
         book = self.session.execute(stmt).scalar_one_or_none()
         if not book:
             return None
         return BookResponse.model_validate(book)
 
-    def read_file_path(self, book_id: int) -> Optional[str]:
+    def read_file_path(self, book_id: int) -> str | None:
         stmt = select(Book.file_path).where(Book.id == book_id)
         return self.session.execute(stmt).scalar_one_or_none()
 
-    def find_by_file_hash(self, file_hash: str) -> Optional[BookResponse]:
+    def find_by_file_hash(self, file_hash: str) -> BookResponse | None:
         stmt = select(Book).where(Book.file_hash == file_hash)
         book = self.session.execute(stmt).scalar_one_or_none()
         if not book:
             return None
         return BookResponse.model_validate(book)
 
-    def update_book(self, book_id: int, payload: BookUpdateRequest) -> Optional[BookResponse]:
+    def update_book(self, book_id: int, payload: BookUpdateRequest) -> BookResponse | None:
         stmt = select(Book).where(Book.id == book_id)
         book = self.session.execute(stmt).scalar_one_or_none()
         if not book:
@@ -158,7 +159,7 @@ class SqlAlchemyBookRepository:
         self.session.refresh(book)
         return BookResponse.model_validate(book)
 
-    def delete_book(self, book_id: int) -> Optional[str]:
+    def delete_book(self, book_id: int) -> str | None:
         stmt = select(Book).where(Book.id == book_id)
         book = self.session.execute(stmt).scalar_one_or_none()
         if not book:
@@ -171,10 +172,10 @@ class SqlAlchemyBookRepository:
 
     def list_books(
         self,
-        q: Optional[str] = None,
-        department_id: Optional[int] = None,
-        course_code: Optional[str] = None,
-        cursor: Optional[int] = None,
+        q: str | None = None,
+        department_id: int | None = None,
+        course_code: str | None = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookListResponse:
         stmt = select(Book)
@@ -211,7 +212,7 @@ class SqlAlchemyBookRepository:
     def get_user_access_history(
         self,
         user_id: int,
-        cursor: Optional[int] = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookAccessHistoryResponse:
         stmt = (

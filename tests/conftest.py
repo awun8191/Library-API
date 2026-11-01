@@ -1,4 +1,5 @@
 """Shared fixtures for the Library API test suite."""
+
 import atexit
 import os
 import shutil
@@ -6,8 +7,8 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Callable, Dict, Generator
 
 import pytest
 
@@ -55,9 +56,7 @@ from tests.fakes import FakeRateLimitStore  # noqa: E402
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register the markers of this project."""
-    config.addinivalue_line(
-        "markers", "postgres_store: uses the real rate limit table"
-    )
+    config.addinivalue_line("markers", "postgres_store: uses the real rate limit table")
 
 
 def run_migrations() -> None:
@@ -79,9 +78,11 @@ def run_migrations() -> None:
 def truncate_all_tables(engine: Engine) -> None:
     """Empty every application table and reset the identity columns."""
     with engine.begin() as connection:
-        table_names = connection.execute(
-            text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-        ).scalars().all()
+        table_names = (
+            connection.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'"))
+            .scalars()
+            .all()
+        )
         # The migration bookkeeping table must keep its rows. Otherwise the next
         # migration run tries to create tables that already exist.
         targets = [name for name in table_names if name != "alembic_version"]
@@ -92,7 +93,7 @@ def truncate_all_tables(engine: Engine) -> None:
 
 
 @pytest.fixture(autouse=True)
-def fresh_settings_cache() -> Generator[None, None, None]:
+def fresh_settings_cache() -> Generator[None]:
     """Drop the cached settings and token issuer so each test reads the test environment."""
     get_settings.cache_clear()
     get_token_issuer.cache_clear()
@@ -106,12 +107,10 @@ def fresh_settings_cache() -> Generator[None, None, None]:
 @pytest.fixture
 def rate_limit_store(
     monkeypatch: pytest.MonkeyPatch,
-) -> Generator[FakeRateLimitStore, None, None]:
+) -> Generator[FakeRateLimitStore]:
     """Give the middleware a fake store with a clock that a test can move."""
     store = FakeRateLimitStore()
-    monkeypatch.setattr(
-        rate_limit_middleware, "build_rate_limit_store", lambda settings: store
-    )
+    monkeypatch.setattr(rate_limit_middleware, "build_rate_limit_store", lambda settings: store)
     yield store
     store.reset()
 
@@ -119,7 +118,7 @@ def rate_limit_store(
 @pytest.fixture(autouse=True)
 def reset_rate_limit_state(
     rate_limit_store: FakeRateLimitStore,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Start each test with no counters, in the fake store and in the memory store."""
     clear_rate_limit_stores()
     rate_limit_store.reset()
@@ -129,7 +128,7 @@ def reset_rate_limit_state(
 
 
 @pytest.fixture(scope="session")
-def db_engine() -> Generator[Engine, None, None]:
+def db_engine() -> Generator[Engine]:
     """Provide an engine for the test database."""
     engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
     yield engine
@@ -137,7 +136,7 @@ def db_engine() -> Generator[Engine, None, None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def migrated_database(db_engine: Engine) -> Generator[None, None, None]:
+def migrated_database(db_engine: Engine) -> Generator[None]:
     """Build the schema once per session and start from empty tables."""
     run_migrations()
     truncate_all_tables(db_engine)
@@ -145,7 +144,7 @@ def migrated_database(db_engine: Engine) -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def storage_directory() -> Generator[Path, None, None]:
+def storage_directory() -> Generator[Path]:
     """Give the session one temporary storage directory and remove it at the end."""
     directory = Path(STORAGE_DIRECTORY)
     directory.mkdir(parents=True, exist_ok=True)
@@ -154,7 +153,7 @@ def storage_directory() -> Generator[Path, None, None]:
 
 
 @pytest.fixture
-def db_session(db_engine: Engine, migrated_database: None) -> Generator[Session, None, None]:
+def db_session(db_engine: Engine, migrated_database: None) -> Generator[Session]:
     """Bind a session to a transaction and roll the transaction back after the test."""
     connection = db_engine.connect()
     transaction = connection.begin()
@@ -168,10 +167,10 @@ def db_session(db_engine: Engine, migrated_database: None) -> Generator[Session,
 
 
 @pytest.fixture
-def client(db_session: Session) -> Generator[TestClient, None, None]:
+def client(db_session: Session) -> Generator[TestClient]:
     """Provide a test client that uses the transactional test session."""
 
-    def override_get_db() -> Generator[Session, None, None]:
+    def override_get_db() -> Generator[Session]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
@@ -284,7 +283,7 @@ def make_book(
 
 
 @pytest.fixture
-def auth_headers() -> Callable[[UserResponse], Dict[str, str]]:
+def auth_headers() -> Callable[[UserResponse], dict[str, str]]:
     """Build an Authorization header for a user with the test secret."""
     issuer = JwtTokenIssuer(
         secret_key=TEST_SECRET_KEY,
@@ -292,7 +291,7 @@ def auth_headers() -> Callable[[UserResponse], Dict[str, str]]:
         expire_minutes=60,
     )
 
-    def _auth_headers(user: UserResponse) -> Dict[str, str]:
+    def _auth_headers(user: UserResponse) -> dict[str, str]:
         token, _ = issuer.issue(user.id)
         return {"Authorization": f"Bearer {token}"}
 

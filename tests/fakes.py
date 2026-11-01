@@ -1,8 +1,8 @@
 """In-memory test doubles for the repository and storage contracts."""
+
 import math
 import time
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from datetime import UTC, datetime
 
 from sqlalchemy.exc import IntegrityError
 
@@ -31,16 +31,16 @@ def build_integrity_error() -> IntegrityError:
 
 def _now() -> datetime:
     """Return the current UTC time."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class FakeFileStorage:
     """Keep stored files in memory."""
 
     def __init__(self) -> None:
-        self.files: Dict[str, bytes] = {}
-        self.store_calls: List[bytes] = []
-        self.deleted_paths: List[str] = []
+        self.files: dict[str, bytes] = {}
+        self.store_calls: list[bytes] = []
+        self.deleted_paths: list[str] = []
 
     def seed(self, file_path: str, content: bytes) -> None:
         """Put a file in the store without a store call."""
@@ -66,11 +66,11 @@ class FakeBookRepository:
     """Keep books and access records in memory."""
 
     def __init__(self) -> None:
-        self.books: Dict[int, BookResponse] = {}
-        self.file_paths: Dict[int, str] = {}
-        self.hashes: Dict[str, int] = {}
-        self.accesses: List[BookAccessResponse] = []
-        self.list_calls: List[dict] = []
+        self.books: dict[int, BookResponse] = {}
+        self.file_paths: dict[int, str] = {}
+        self.hashes: dict[str, int] = {}
+        self.accesses: list[BookAccessResponse] = []
+        self.list_calls: list[dict] = []
         self._next_id = 1
 
     def upload_book(
@@ -103,33 +103,31 @@ class FakeBookRepository:
         self.hashes[file_hash] = book.id
         return book
 
-    def read_book(self, book_id: int) -> Optional[BookResponse]:
+    def read_book(self, book_id: int) -> BookResponse | None:
         return self.books.get(book_id)
 
-    def read_file_path(self, book_id: int) -> Optional[str]:
+    def read_file_path(self, book_id: int) -> str | None:
         return self.file_paths.get(book_id)
 
-    def find_by_file_hash(self, file_hash: str) -> Optional[BookResponse]:
+    def find_by_file_hash(self, file_hash: str) -> BookResponse | None:
         book_id = self.hashes.get(file_hash)
         if book_id is None:
             return None
         return self.books.get(book_id)
 
-    def update_book(self, book_id: int, payload: BookUpdateRequest) -> Optional[BookResponse]:
+    def update_book(self, book_id: int, payload: BookUpdateRequest) -> BookResponse | None:
         book = self.books.get(book_id)
         if book is None:
             return None
 
         changes = {
-            field: value
-            for field, value in payload.model_dump().items()
-            if value is not None
+            field: value for field, value in payload.model_dump().items() if value is not None
         }
         updated = book.model_copy(update={**changes, "updated_at": _now()})
         self.books[book_id] = updated
         return updated
 
-    def delete_book(self, book_id: int) -> Optional[str]:
+    def delete_book(self, book_id: int) -> str | None:
         book = self.books.pop(book_id, None)
         if book is None:
             return None
@@ -144,10 +142,10 @@ class FakeBookRepository:
 
     def list_books(
         self,
-        q: Optional[str] = None,
-        department_id: Optional[int] = None,
-        course_code: Optional[str] = None,
-        cursor: Optional[int] = None,
+        q: str | None = None,
+        department_id: int | None = None,
+        course_code: str | None = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookListResponse:
         self.list_calls.append(
@@ -175,7 +173,7 @@ class FakeBookRepository:
     def get_user_access_history(
         self,
         user_id: int,
-        cursor: Optional[int] = None,
+        cursor: int | None = None,
         limit: int = 10,
     ) -> BookAccessHistoryResponse:
         rows = [access for access in self.accesses if access.user_id == user_id]
@@ -198,9 +196,9 @@ class FakeAuthRepository:
     """Keep accounts in memory."""
 
     def __init__(self) -> None:
-        self.credentials: Dict[str, UserCredentials] = {}
-        self.users: Dict[int, UserResponse] = {}
-        self.created: List[dict] = []
+        self.credentials: dict[str, UserCredentials] = {}
+        self.users: dict[int, UserResponse] = {}
+        self.created: list[dict] = []
         self._next_id = 1
 
     def add_user(
@@ -211,7 +209,7 @@ class FakeAuthRepository:
         is_active: bool = True,
         first_name: str = "Ada",
         last_name: str = "Obi",
-        department_id: Optional[int] = None,
+        department_id: int | None = None,
     ) -> UserResponse:
         """Store an account without a create call."""
         user_id = self._next_id
@@ -235,7 +233,7 @@ class FakeAuthRepository:
         self.users[user_id] = user
         return user
 
-    def get_credentials_by_email(self, email: str) -> Optional[UserCredentials]:
+    def get_credentials_by_email(self, email: str) -> UserCredentials | None:
         return self.credentials.get(email.strip().lower())
 
     def create_user(
@@ -244,7 +242,7 @@ class FakeAuthRepository:
         last_name: str,
         email: str,
         password_hash: str,
-        department_id: Optional[int] = None,
+        department_id: int | None = None,
     ) -> UserResponse:
         if email.strip().lower() in self.credentials:
             raise build_integrity_error()
@@ -271,20 +269,18 @@ class FakeUserRepository:
     """Keep user profiles in memory."""
 
     def __init__(self) -> None:
-        self.users: Dict[int, UserResponse] = {}
+        self.users: dict[int, UserResponse] = {}
 
-    def get_by_id(self, user_id: int) -> Optional[UserResponse]:
+    def get_by_id(self, user_id: int) -> UserResponse | None:
         return self.users.get(user_id)
 
-    def update_user(self, user_id: int, payload: UserUpdateRequest) -> Optional[UserResponse]:
+    def update_user(self, user_id: int, payload: UserUpdateRequest) -> UserResponse | None:
         user = self.users.get(user_id)
         if user is None:
             return None
 
         changes = {
-            field: value
-            for field, value in payload.model_dump().items()
-            if value is not None
+            field: value for field, value in payload.model_dump().items() if value is not None
         }
         updated = user.model_copy(update=changes)
         self.users[user_id] = updated
@@ -295,19 +291,19 @@ class FakeDepartmentRepository:
     """Keep departments in memory."""
 
     def __init__(self) -> None:
-        self.departments: Dict[int, DepartmentResponse] = {}
+        self.departments: dict[int, DepartmentResponse] = {}
 
-    def add(self, name: str, department_id: Optional[int] = None) -> DepartmentResponse:
+    def add(self, name: str, department_id: int | None = None) -> DepartmentResponse:
         """Store a department without a database call."""
         new_id = department_id if department_id is not None else len(self.departments) + 1
         department = DepartmentResponse(id=new_id, name=name, created_at=_now(), updated_at=_now())
         self.departments[new_id] = department
         return department
 
-    def list_departments(self) -> List[DepartmentResponse]:
+    def list_departments(self) -> list[DepartmentResponse]:
         return list(self.departments.values())
 
-    def get_by_id(self, department_id: int) -> Optional[DepartmentResponse]:
+    def get_by_id(self, department_id: int) -> DepartmentResponse | None:
         return self.departments.get(department_id)
 
 
@@ -317,8 +313,8 @@ class FakeRateLimitStore:
     def __init__(self) -> None:
         self.clock: float = time.time()
         # Each value holds the hit count and the start of its window.
-        self.counters: Dict[str, Tuple[int, float]] = {}
-        self.prune_calls: List[int] = []
+        self.counters: dict[str, tuple[int, float]] = {}
+        self.prune_calls: list[int] = []
 
     def set_clock(self, value: float) -> None:
         """Move the clock to a fixed time."""
@@ -343,7 +339,7 @@ class FakeRateLimitStore:
         self.counters[key] = (hits, window_start)
         return RateLimitHit(
             hits=hits,
-            window_start=datetime.fromtimestamp(window_start, tz=timezone.utc),
+            window_start=datetime.fromtimestamp(window_start, tz=UTC),
             window_seconds=window_seconds,
         )
 

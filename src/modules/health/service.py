@@ -1,4 +1,5 @@
 """Health resource business rules."""
+
 import logging
 
 from sqlalchemy import text
