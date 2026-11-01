@@ -1,0 +1,37 @@
+# Version control
+.git
+.gitignore
+
+# Local environment and secrets
+.venv
+.env
+.env.*
+
+# Local data
+Storage
+storage
+uploads
+
+# Tests and local tool state
+tests
+.coverage
+coverage.xml
+htmlcov
+.pytest_cache
+.ruff_cache
+.mypy_cache
+__pycache__
+*.py[cod]
+
+# CI and hosting configuration
+.github
+.vercel
+vercel.json
+
+# Documents and local compose files
+*.md
+docker-compose*.yml
+
+# The image files themselves
+Dockerfile
+.dockerignore
