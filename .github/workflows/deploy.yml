@@ -46,6 +46,9 @@ jobs:
       - name: Apply the migrations
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          # Migrations read the settings object, which requires a signing key.
+          # The value is never used to sign a token in this job.
+          SECRET_KEY: migration-only-placeholder-signing-key-0001
         run: uv run alembic upgrade head
 
   deploy:
