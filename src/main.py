@@ -4,11 +4,13 @@ from fastapi import FastAPI
 
 from core.config import AppSettings, get_settings
 from core.exceptions import register_exception_handler
+from core.logging import configure_logging
 from integrations.database import get_db_manager
 from middleware import register_middleware
 from modules.auth.router import get_auth_router
 from modules.books.router import get_books_router
 from modules.departments.router import get_departments_router
+from modules.health.router import get_health_router
 from modules.users.router import get_users_router
 
 
@@ -20,6 +22,7 @@ async def lifespan(app: FastAPI):
 
 def initialize_app(settings: AppSettings) -> FastAPI:
     """Initialize and configure the FastAPI application."""
+    configure_logging(settings)
     is_development = settings.environment == "development"
     app = FastAPI(
         title=settings.api_name,
@@ -36,6 +39,7 @@ def initialize_app(settings: AppSettings) -> FastAPI:
     register_middleware(app, settings)
 
     # Register resource routers
+    app.include_router(router=get_health_router(settings))
     app.include_router(router=get_auth_router(settings))
     app.include_router(router=get_users_router(settings))
     app.include_router(router=get_books_router(settings))

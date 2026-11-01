@@ -27,6 +27,9 @@ class AppSettings(BaseSettings):
     rate_limit_signup_per_hour: int = 5
     rate_limit_upload_per_hour: int = 30
     trust_proxy_headers: bool = False
+    max_upload_mb: int = Field(default=4, ge=1)
+    log_level: str = "INFO"
+    log_json: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:

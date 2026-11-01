@@ -11,6 +11,7 @@ from core.exceptions import (
     BookNotFoundException,
     DepartmentNotFoundException,
     DuplicateFileException,
+    FileTooLargeException,
     FileUploadException,
 )
 from modules.books.data import BookListResponse, BookUpdateRequest
@@ -36,12 +37,14 @@ def build_service(
     books: Optional[FakeBookRepository] = None,
     storage: Optional[FakeFileStorage] = None,
     departments: Optional[FakeDepartmentRepository] = None,
+    max_upload_bytes: Optional[int] = None,
 ) -> BookService:
     """Build the book service on top of the fakes."""
     return BookService(
         book_repo=books if books is not None else FakeBookRepository(),
         file_storage=storage if storage is not None else build_storage(),
         dept_repo=departments,
+        max_upload_bytes=max_upload_bytes,
     )
 
 
@@ -189,6 +192,35 @@ def test_update_of_a_missing_book_raises():
 
     with pytest.raises(BookNotFoundException):
         service.update_book(404, BookUpdateRequest(topic="Graphs"))
+
+
+def test_upload_over_the_service_limit_raises_and_writes_nothing():
+    storage = build_storage()
+    service = build_service(
+        storage=storage, departments=build_departments(), max_upload_bytes=16
+    )
+
+    with pytest.raises(FileTooLargeException) as error:
+        upload(service)
+
+    assert error.value.status_code == 413
+    assert error.value.code == "FILE_TOO_LARGE"
+    assert storage.store_calls == []
+    assert storage.files == {}
+
+
+def test_upload_at_the_service_limit_is_stored():
+    storage = build_storage()
+    service = build_service(
+        storage=storage,
+        departments=build_departments(),
+        max_upload_bytes=len(PDF_BYTES),
+    )
+
+    created = upload(service)
+
+    assert created.course_code == "CSC201"
+    assert list(storage.files.values()) == [PDF_BYTES]
 
 
 def test_list_books_forwards_the_filters():

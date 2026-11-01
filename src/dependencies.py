@@ -68,10 +68,12 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
 
 def get_book_service(db: Session = Depends(get_db)) -> BookService:
     """Dependency that instantiates the book service."""
+    settings = get_settings()
     return BookService(
         book_repo=SqlAlchemyBookRepository(db),
-        file_storage=FileStorage(Path(get_settings().storage_dir)),
+        file_storage=FileStorage(Path(settings.storage_dir)),
         dept_repo=SqlAlchemyDepartmentRepository(db),
+        max_upload_bytes=settings.max_upload_mb * 1024 * 1024,
     )
 
 

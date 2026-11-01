@@ -10,6 +10,7 @@ from core.exceptions import (
     DepartmentNotFoundException,
     DuplicateFileException,
     FileNotFoundException,
+    FileTooLargeException,
     FileUploadException,
 )
 from core.repository import FileStorageRepository
@@ -31,10 +32,12 @@ class BookService:
         book_repo: BookRepository,
         file_storage: FileStorageRepository,
         dept_repo: Optional[DepartmentRepository] = None,
+        max_upload_bytes: Optional[int] = None,
     ):
         self.book_repo = book_repo
         self.file_storage = file_storage
         self.dept_repo = dept_repo
+        self.max_upload_bytes = max_upload_bytes
 
     async def upload_book(
         self,
@@ -52,6 +55,8 @@ class BookService:
                 raise DepartmentNotFoundException()
 
         content = await file.read()
+        if self.max_upload_bytes is not None and len(content) > self.max_upload_bytes:
+            raise FileTooLargeException()
         if not content.startswith(PDF_MAGIC):
             raise FileUploadException("Only PDF files are allowed")
 

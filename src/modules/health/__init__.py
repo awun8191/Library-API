@@ -1,0 +1,1 @@
+"""Health resource package."""

@@ -38,6 +38,7 @@ def get_books_router(settings: AppSettings) -> APIRouter:
             403: {"description": "Forbidden (Admin only)"},
             404: {"description": "Department not found"},
             409: {"description": "Conflict (Duplicate file hash)"},
+            413: {"description": "File too large"},
             429: {"description": "Too many upload requests"},
         },
     )

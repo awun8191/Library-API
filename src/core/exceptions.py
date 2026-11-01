@@ -1,9 +1,12 @@
 #  ------------------------    BASE EXCEPTION   --------------------------------
+import logging
 from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 class AppException(Exception):
@@ -43,6 +46,11 @@ class DuplicateFileException(AppException):
     message: str = "Duplicate file: this document has already been uploaded"
     status_code: int = 409
     code: str = "DUPLICATE_FILE"
+
+class FileTooLargeException(AppException):
+    message: str = "File too large: the upload limit is exceeded"
+    status_code: int = 413
+    code: str = "FILE_TOO_LARGE"
 
 # ------------------------   USER EXCEPTIONS -----------------------------------------
 
@@ -130,8 +138,27 @@ def register_exception_handler(app: FastAPI):
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception):
-        """Never leak stack traces to clients."""
+        """Log the traceback and return a safe body. Never leak a stack trace."""
+        # The import stays in this function. A module level import would close a
+        # cycle with the middleware package.
+        from middleware.request_id import REQUEST_ID_HEADER, get_request_id
+
+        # The handler for an unexpected error runs outside the middleware stack,
+        # so the context variable is already reset. The request state keeps it.
+        request_id = getattr(request.state, "request_id", None) or get_request_id()
+        logger.exception(
+            "Unhandled error on %s %s request_id=%s",
+            request.method,
+            request.url.path,
+            request_id,
+            extra={"request_id": request_id},
+        )
         return JSONResponse(
             status_code=500,
-            content={"message": "Internal server error", "code": "INTERNAL_ERROR"},
+            content={
+                "message": "Internal server error",
+                "code": "INTERNAL_ERROR",
+                "request_id": request_id,
+            },
+            headers={REQUEST_ID_HEADER: request_id},
         )
