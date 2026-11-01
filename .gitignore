@@ -46,3 +46,5 @@ Thumbs.db
 
 # Docker overrides
 docker-compose.override.yml
+.vercel
+.env*
