@@ -24,8 +24,8 @@ dev = [
 target-version = "py314"
 line-length = 100
 src = ["src", "tests"]
-# Migrations are generated files. The scripts belong to another work stream.
-exclude = ["migrations", "scripts"]
+# Migrations are generated files. The scripts use the same rules as the application.
+exclude = ["migrations"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -8,6 +8,7 @@ Safe to run more than once: existing rows are reused, never duplicated.
 Creates 3 departments, an admin and a student, 3 dummy course-material PDFs
 (written to Storage/) and one reading-history entry.
 """
+
 import hashlib
 import sys
 from pathlib import Path
@@ -35,9 +36,27 @@ USERS = [
 
 BOOKS = [
     # (name, course_name, topic, course_code, department)
-    ("Data Structures Lecture Notes", "Data Structures", "Linked Lists and Trees", "CSC201", "Computer Science"),
-    ("Intro to Databases Handout", "Database Systems", "Relational Model and SQL", "CSC305", "Computer Science"),
-    ("Circuit Theory Past Questions", "Circuit Theory I", "Kirchhoff's Laws", "EEE211", "Electrical Engineering"),
+    (
+        "Data Structures Lecture Notes",
+        "Data Structures",
+        "Linked Lists and Trees",
+        "CSC201",
+        "Computer Science",
+    ),
+    (
+        "Intro to Databases Handout",
+        "Database Systems",
+        "Relational Model and SQL",
+        "CSC305",
+        "Computer Science",
+    ),
+    (
+        "Circuit Theory Past Questions",
+        "Circuit Theory I",
+        "Kirchhoff's Laws",
+        "EEE211",
+        "Electrical Engineering",
+    ),
 ]
 
 
@@ -62,7 +81,9 @@ def make_pdf(title: str) -> bytes:
     out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
     for off in offsets:
         out += f"{off:010d} 00000 n \n".encode()
-    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    out += (
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    )
     return bytes(out)
 
 
@@ -73,7 +94,9 @@ def seed_database() -> None:
     try:
         departments = {}
         for name in DEPARTMENTS:
-            dept = session.execute(select(Department).where(Department.name == name)).scalar_one_or_none()
+            dept = session.execute(
+                select(Department).where(Department.name == name)
+            ).scalar_one_or_none()
             if not dept:
                 dept = Department(name=name)
                 session.add(dept)
@@ -105,7 +128,9 @@ def seed_database() -> None:
         for name, course_name, topic, course_code, dept_name in BOOKS:
             content = make_pdf(f"{course_code} - {name}")
             file_hash = hashlib.sha256(content).hexdigest()
-            book = session.execute(select(Book).where(Book.file_hash == file_hash)).scalar_one_or_none()
+            book = session.execute(
+                select(Book).where(Book.file_hash == file_hash)
+            ).scalar_one_or_none()
             if not book:
                 file_name = f"seed-{course_code.lower()}.pdf"
                 (STORAGE_DIR / file_name).write_bytes(content)
@@ -138,7 +163,9 @@ def seed_database() -> None:
             )
         session.commit()
         print(f"Seeded {len(departments)} departments, {len(users)} users, {len(books)} books.")
-        print(f"Development login: admin@school.edu or student@school.edu, password '{DEV_PASSWORD}'")
+        print(
+            f"Development login: admin@school.edu or student@school.edu, password '{DEV_PASSWORD}'"
+        )
     finally:
         session.close()
         manager.close()
