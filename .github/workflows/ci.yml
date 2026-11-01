@@ -39,6 +39,11 @@ jobs:
       - name: Check the format
         run: uv run ruff format --check .
 
+      - name: Check the OpenAPI snapshot
+        run: |
+          uv run python scripts/export_openapi.py
+          git diff --exit-code openapi.json
+
   test:
     name: Test
     needs: lint

@@ -1,0 +1,1350 @@
+{
+  "components": {
+    "schemas": {
+      "Body_upload_book_api_v1_books_post": {
+        "properties": {
+          "course_code": {
+            "title": "Course Code",
+            "type": "string"
+          },
+          "course_name": {
+            "title": "Course Name",
+            "type": "string"
+          },
+          "department_id": {
+            "title": "Department Id",
+            "type": "integer"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "course_name",
+          "topic",
+          "course_code",
+          "department_id",
+          "file"
+        ],
+        "title": "Body_upload_book_api_v1_books_post",
+        "type": "object"
+      },
+      "BookAccessHistoryResponse": {
+        "description": "Schema for paginated access history response.",
+        "properties": {
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BookAccessItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BookAccessHistoryResponse",
+        "type": "object"
+      },
+      "BookAccessItemResponse": {
+        "description": "Schema for book access entry in history.",
+        "properties": {
+          "accessed_at": {
+            "format": "date-time",
+            "title": "Accessed At",
+            "type": "string"
+          },
+          "book_id": {
+            "title": "Book Id",
+            "type": "integer"
+          },
+          "book_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Book Name"
+          },
+          "course_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Code"
+          },
+          "file_url": {
+            "description": "Download path of the stored PDF.",
+            "readOnly": true,
+            "title": "File Url",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "book_id",
+          "accessed_at",
+          "file_url"
+        ],
+        "title": "BookAccessItemResponse",
+        "type": "object"
+      },
+      "BookListResponse": {
+        "description": "Schema for paginated list of books.",
+        "properties": {
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BookResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BookListResponse",
+        "type": "object"
+      },
+      "BookResponse": {
+        "description": "Schema for book details.",
+        "properties": {
+          "course_code": {
+            "title": "Course Code",
+            "type": "string"
+          },
+          "course_name": {
+            "title": "Course Name",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "department_id": {
+            "title": "Department Id",
+            "type": "integer"
+          },
+          "file_url": {
+            "description": "Download path of the stored PDF.",
+            "readOnly": true,
+            "title": "File Url",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "course_name",
+          "topic",
+          "course_code",
+          "department_id",
+          "file_url"
+        ],
+        "title": "BookResponse",
+        "type": "object"
+      },
+      "BookUpdateRequest": {
+        "description": "Schema for updating book details.",
+        "properties": {
+          "course_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Code"
+          },
+          "course_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Name"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "title": "BookUpdateRequest",
+        "type": "object"
+      },
+      "DepartmentResponse": {
+        "description": "Schema for department representation.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "DepartmentResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Schema for the health of the application.",
+        "properties": {
+          "database": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Database",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database",
+          "version"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "description": "Schema for account login.",
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "SignupRequest": {
+        "description": "Schema for account registration.",
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Last Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "password"
+        ],
+        "title": "SignupRequest",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "description": "Schema for auth token response.",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "UserResponse": {
+        "description": "Public user response schema - the only user fields ever returned.",
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "user",
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "email"
+        ],
+        "title": "UserResponse",
+        "type": "object"
+      },
+      "UserUpdateRequest": {
+        "description": "Schema for updating current user profile.",
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          }
+        },
+        "title": "UserUpdateRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "A simple library API that uses a domain driven architecture for clear separation",
+    "summary": "A simple library API",
+    "title": "Library API",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Authenticate a user and return an access token.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Authentication successful"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "403": {
+            "description": "Account is inactive"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Too many login requests"
+          }
+        },
+        "summary": "Get an auth token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "description": "Create a new user account.",
+        "operationId": "signup_api_v1_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Account created successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "404": {
+            "description": "Department not found"
+          },
+          "409": {
+            "description": "An account with this email already exists"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Too many signup requests"
+          }
+        },
+        "summary": "Create an account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/books": {
+      "get": {
+        "description": "List books that match the search term and the filters.",
+        "operationId": "list_books_api_v1_books_get",
+        "parameters": [
+          {
+            "description": "Search term for book name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search term for book name",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Filter by department ID",
+            "in": "query",
+            "name": "department_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by department ID",
+              "title": "Department Id"
+            }
+          },
+          {
+            "description": "Filter by course code",
+            "in": "query",
+            "name": "course_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by course code",
+              "title": "Course Code"
+            }
+          },
+          {
+            "description": "Cursor from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor from the previous page",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Items per page",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookListResponse"
+                }
+              }
+            },
+            "description": "Books fetched successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List books with search, filters, and cursor pagination",
+        "tags": [
+          "Books"
+        ]
+      },
+      "post": {
+        "description": "Upload a course material PDF (Admin only).",
+        "operationId": "upload_book_api_v1_books_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_book_api_v1_books_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookResponse"
+                }
+              }
+            },
+            "description": "Book uploaded successfully"
+          },
+          "400": {
+            "description": "Invalid request data or invalid file type"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (Admin only)"
+          },
+          "404": {
+            "description": "Department not found"
+          },
+          "409": {
+            "description": "Conflict (Duplicate file hash)"
+          },
+          "413": {
+            "description": "File too large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Too many upload requests"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload a book (PDF)",
+        "tags": [
+          "Books"
+        ]
+      }
+    },
+    "/api/v1/books/{id}": {
+      "delete": {
+        "description": "Delete a book and its stored file (Admin only).",
+        "operationId": "delete_book_api_v1_books__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Book deleted successfully"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (Admin only)"
+          },
+          "404": {
+            "description": "Book not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete a book (Admin only)",
+        "tags": [
+          "Books"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details of a single course material by ID.",
+        "operationId": "get_book_api_v1_books__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookResponse"
+                }
+              }
+            },
+            "description": "Book details fetched successfully"
+          },
+          "404": {
+            "description": "Book not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get details of a single book",
+        "tags": [
+          "Books"
+        ]
+      },
+      "patch": {
+        "description": "Update book metadata (Admin only).",
+        "operationId": "update_book_api_v1_books__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookResponse"
+                }
+              }
+            },
+            "description": "Book updated successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (Admin only)"
+          },
+          "404": {
+            "description": "Book or department not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update a book (Admin only)",
+        "tags": [
+          "Books"
+        ]
+      }
+    },
+    "/api/v1/books/{id}/file": {
+      "get": {
+        "description": "Stream the stored PDF and record the access for the current user.",
+        "operationId": "download_book_api_v1_books__id__file_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "PDF stream"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Account is inactive"
+          },
+          "404": {
+            "description": "Book or stored file not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download a book PDF",
+        "tags": [
+          "Books"
+        ]
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "description": "List all departments available for filtering and categorizing course materials.",
+        "operationId": "list_departments_api_v1_departments_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DepartmentResponse"
+                  },
+                  "title": "Response List Departments Api V1 Departments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "List of departments fetched successfully"
+          }
+        },
+        "summary": "List departments",
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "description": "Retrieve the profile of the currently authenticated user.",
+        "operationId": "get_me_api_v1_users_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Current user profile fetched successfully"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Current user profile",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "description": "Update fields on the current user's profile.",
+        "operationId": "update_me_api_v1_users_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Profile updated successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "User or department not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update own profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/me/access-history": {
+      "get": {
+        "description": "Retrieve the reading history of the current user with cursor pagination.",
+        "operationId": "get_my_access_history_api_v1_users_me_access_history_get",
+        "parameters": [
+          {
+            "description": "Cursor from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor from the previous page",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Items per page",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookAccessHistoryResponse"
+                }
+              }
+            },
+            "description": "Access history fetched successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Books the current user has opened",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Return the state of the application and its database.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "The application and the database are ready"
+          },
+          "503": {
+            "description": "The database is not reachable"
+          }
+        },
+        "summary": "Report the health of the application",
+        "tags": [
+          "Health"
+        ]
+      }
+    }
+  }
+}
