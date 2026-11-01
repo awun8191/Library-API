@@ -321,7 +321,7 @@ The deploy workflow needs these repository secrets and variables:
 
 ## Deployment
 
-The target is Vercel for the application and Neon for PostgreSQL. **The deployment is prepared but it has not run yet.** No live URL exists. The repository holds `index.py` (the entrypoint that puts `src` on the import path and exposes `app`) and `vercel.json` (the FastAPI framework preset).
+The target is Vercel for the application and Neon for PostgreSQL. **It is live at https://library-api-nasirs-projects-4d69b822.vercel.app** with demo data seeded. The repository holds `index.py` (the entrypoint that puts `src` on the import path and exposes `app`) and `vercel.json` (the FastAPI framework preset).
 
 The pipeline works in this order: CI passes, the **Migrate** job applies `alembic upgrade head` to the production database, the **Deploy** job builds and ships the Vercel deployment, and the **Smoke** job calls `/health`.
 
@@ -367,7 +367,7 @@ Environment variables for the production project:
 | Week 1 | Data model, migrations, books CRUD, search, filters, pagination, seed data | Done |
 | Week 2 | Signup, login, JWT, role checks, guarded file delivery, access history, CORS | Done |
 | Week 3 | Tests, rate limits, request ids, logs, upload limit, health route, CI, Docker, Vercel entrypoint | Done |
-| Next | The first production deployment on Vercel and Neon, then a file store that survives a redeploy | Planned |
+| Next | A file store that survives a redeploy, so an admin upload works in production | Planned |
 
 The full history is in the [changelog](./CHANGELOG.md).
 
