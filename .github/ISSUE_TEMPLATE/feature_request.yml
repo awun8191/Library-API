@@ -1,0 +1,68 @@
+name: Feature request
+description: Propose a new capability or a change in behavior.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem before the solution. The API stays small on
+        purpose, so a request that adds a new dependency needs a strong reason.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Which task is hard or impossible today?
+      placeholder: A student cannot tell which books belong to the current semester.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the behavior that you want. Include a route, a field, or a setting when it applies.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Which other approach did you consider, and why did you reject it?
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Authentication
+        - Books and uploads
+        - Search and filters
+        - File delivery
+        - Rate limiting
+        - Observability
+        - Tests
+        - Documentation
+        - Deployment
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Does the change break an existing contract?
+      description: A new required field, a removed field, or a new status code breaks a client.
+      options:
+        - "No"
+        - "Yes"
+        - Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the open issues and the roadmap for this request.
+          required: true
+        - label: The request needs no new runtime dependency, or I explain why the dependency is necessary.
+          required: true

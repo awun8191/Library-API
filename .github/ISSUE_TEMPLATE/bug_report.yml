@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a fault in the API, the tests, or the documentation.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Do not include secrets, tokens, or personal
+        data. For a security problem, follow SECURITY.md and send an email
+        instead of opening an issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe the result that you saw.
+      placeholder: The upload route returned 500 for a valid PDF.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact requests or commands, in order.
+      placeholder: |
+        1. Run uv run uvicorn main:app --app-dir src
+        2. Send POST /api/v1/books with a 2 MB PDF
+        3. Read the response
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: Describe the result that you expected.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The week tag, the branch, or the commit hash.
+      placeholder: week-3, commit 08f3e48
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the project does the problem touch?
+      options:
+        - Authentication
+        - Books and uploads
+        - Search and filters
+        - File delivery
+        - Rate limiting
+        - Database and migrations
+        - Tests
+        - Documentation
+        - Deployment
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or response body
+      description: Paste the response body or the log line. Remove every secret first.
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the open issues for the same problem.
+          required: true
+        - label: I removed every secret, token, and personal record from this report.
+          required: true
