@@ -64,20 +64,11 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: 0.13.1
-          enable-cache: true
-
-      - name: Pull the Vercel project settings
-        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build the project
-        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy the build
-        run: npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      # Vercel builds the function on its own machine, so the wheel set always
+      # matches the runtime that serves it. A prebuilt bundle from the runner
+      # installed wheels for a newer Python than the function runtime.
+      - name: Deploy to production
+        run: npx vercel@latest deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
   smoke:
     name: Smoke
