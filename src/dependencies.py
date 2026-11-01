@@ -1,5 +1,6 @@
 """Application dependency wiring shared across resource modules."""
 from functools import lru_cache
+from pathlib import Path
 from typing import Generator, Optional
 
 from fastapi import Depends
@@ -69,7 +70,7 @@ def get_book_service(db: Session = Depends(get_db)) -> BookService:
     """Dependency that instantiates the book service."""
     return BookService(
         book_repo=SqlAlchemyBookRepository(db),
-        file_storage=FileStorage(),
+        file_storage=FileStorage(Path(get_settings().storage_dir)),
         dept_repo=SqlAlchemyDepartmentRepository(db),
     )
 

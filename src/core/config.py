@@ -19,6 +19,7 @@ class AppSettings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, ge=1)
     cors_allow_origins: str = "*"
+    storage_dir: str = "Storage"
 
     @property
     def cors_origin_list(self) -> list[str]:
