@@ -4,14 +4,21 @@
       "Body_upload_book_api_v1_books_post": {
         "properties": {
           "course_code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Course Code",
             "type": "string"
           },
           "course_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Course Name",
             "type": "string"
           },
           "department_id": {
+            "exclusiveMinimum": 0.0,
             "title": "Department Id",
             "type": "integer"
           },
@@ -21,10 +28,16 @@
             "type": "string"
           },
           "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Name",
             "type": "string"
           },
           "topic": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Topic",
             "type": "string"
           }
@@ -231,11 +244,13 @@
         "type": "object"
       },
       "BookUpdateRequest": {
-        "description": "Schema for updating book details.",
+        "description": "Schema for updating book details. Only the fields sent are changed.",
         "properties": {
           "course_code": {
             "anyOf": [
               {
+                "maxLength": 64,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -247,6 +262,8 @@
           "course_name": {
             "anyOf": [
               {
+                "maxLength": 255,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -258,6 +275,7 @@
           "department_id": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0.0,
                 "type": "integer"
               },
               {
@@ -269,6 +287,8 @@
           "name": {
             "anyOf": [
               {
+                "maxLength": 255,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -280,6 +300,8 @@
           "topic": {
             "anyOf": [
               {
+                "maxLength": 255,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -408,6 +430,7 @@
           "department_id": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0.0,
                 "type": "integer"
               },
               {
@@ -424,12 +447,14 @@
           "first_name": {
             "maxLength": 100,
             "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "First Name",
             "type": "string"
           },
           "last_name": {
             "maxLength": 100,
             "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Last Name",
             "type": "string"
           },
@@ -511,6 +536,10 @@
           },
           "role": {
             "default": "user",
+            "enum": [
+              "admin",
+              "user"
+            ],
             "title": "Role",
             "type": "string"
           }
@@ -525,11 +554,12 @@
         "type": "object"
       },
       "UserUpdateRequest": {
-        "description": "Schema for updating current user profile.",
+        "description": "Schema for updating the current user's profile. Only the fields sent are changed.\n\n``department_id`` may be sent as null to leave a department.",
         "properties": {
           "department_id": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0.0,
                 "type": "integer"
               },
               {
@@ -541,6 +571,8 @@
           "first_name": {
             "anyOf": [
               {
+                "maxLength": 100,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -552,6 +584,8 @@
           "last_name": {
             "anyOf": [
               {
+                "maxLength": 100,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -887,7 +921,7 @@
             "description": "Conflict (Duplicate file hash)"
           },
           "413": {
-            "description": "File too large"
+            "description": "File is larger than the upload limit"
           },
           "422": {
             "content": {
@@ -1159,7 +1193,7 @@
     },
     "/api/v1/users/me": {
       "get": {
-        "description": "Retrieve the profile of the currently authenticated user.",
+        "description": "Retrieve the profile of the currently authenticated user.\n\nget_current_user already reads the user from the database on this request.",
         "operationId": "get_me_api_v1_users_me_get",
         "responses": {
           "200": {

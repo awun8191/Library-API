@@ -33,7 +33,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         settings = get_settings()
         if request.method == "POST" and request.url.path == f"{settings.api_prefix}/books":
-            limit = settings.max_upload_mb * 1024 * 1024
+            limit = settings.max_upload_size_bytes
             declared = _declared_length(request)
             if declared is not None and declared > limit:
                 error = FileTooLargeException()

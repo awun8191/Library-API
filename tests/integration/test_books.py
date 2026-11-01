@@ -149,13 +149,19 @@ def test_get_unknown_book_returns_404(client: TestClient) -> None:
 
 
 def test_delete_removes_the_row_and_the_stored_file(
-    client: TestClient, make_user, make_department, make_pdf, auth_headers, db_session
+    client: TestClient,
+    make_user,
+    make_department,
+    make_pdf,
+    auth_headers,
+    db_session,
+    storage_directory,
 ) -> None:
     admin = make_user(role="admin")
     department = make_department()
     upload = upload_book(client, auth_headers(admin), department.id, make_pdf("delete-me"))
     book_id = upload.json()["id"]
-    file_path = Path(stored_file_path(db_session, book_id))
+    file_path = Path(storage_directory) / stored_file_path(db_session, book_id)
     assert file_path.is_file()
 
     response = client.delete(f"{BOOKS_URL}/{book_id}", headers=auth_headers(admin))

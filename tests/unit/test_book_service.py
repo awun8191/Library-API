@@ -1,6 +1,5 @@
 """Unit tests for the book use cases."""
 
-import asyncio
 import hashlib
 import io
 
@@ -37,7 +36,7 @@ def build_service(
     books: FakeBookRepository | None = None,
     storage: FakeFileStorage | None = None,
     departments: FakeDepartmentRepository | None = None,
-    max_upload_bytes: int | None = None,
+    max_upload_bytes: int = 20 * 1024 * 1024,
 ) -> BookService:
     """Build the book service on top of the fakes."""
     return BookService(
@@ -55,16 +54,14 @@ def build_upload(content: bytes = PDF_BYTES) -> UploadFile:
 
 def upload(service: BookService, content: bytes = PDF_BYTES, department_id: int = 1):
     """Call the upload use case with fixed metadata."""
-    return asyncio.run(
-        service.upload_book(
-            name="Intro to Algorithms",
-            course_name="Data Structures",
-            topic="Sorting",
-            course_code="CSC201",
-            department_id=department_id,
-            file=build_upload(content),
-            uploaded_by=1,
-        )
+    return service.upload_book(
+        name="Intro to Algorithms",
+        course_name="Data Structures",
+        topic="Sorting",
+        course_code="CSC201",
+        department_id=department_id,
+        file=build_upload(content),
+        uploaded_by=1,
     )
 
 

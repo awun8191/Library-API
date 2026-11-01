@@ -271,7 +271,7 @@ def make_book(
             topic=topic,
             course_code=course_code,
             file_hash=file_hash or uuid.uuid4().hex + uuid.uuid4().hex,
-            file_path=file_path or str(Path(STORAGE_DIRECTORY) / f"{uuid.uuid4().hex}.pdf"),
+            file_path=file_path or f"{uuid.uuid4().hex}.pdf",
             uploaded_by=uploaded_by,
             department_id=department_id,
         )

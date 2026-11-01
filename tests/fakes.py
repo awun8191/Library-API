@@ -46,7 +46,7 @@ class FakeFileStorage:
         """Put a file in the store without a store call."""
         self.files[file_path] = content
 
-    async def store_file(self, content: bytes) -> str:
+    def store_file(self, content: bytes) -> str:
         file_path = f"/memory/{len(self.store_calls) + 1}.pdf"
         self.files[file_path] = content
         self.store_calls.append(content)
@@ -108,6 +108,13 @@ class FakeBookRepository:
 
     def read_file_path(self, book_id: int) -> str | None:
         return self.file_paths.get(book_id)
+
+    def read_book_with_file(self, book_id: int):
+        book = self.books.get(book_id)
+        file_path = self.file_paths.get(book_id)
+        if book is None or file_path is None:
+            return None
+        return book, file_path
 
     def find_by_file_hash(self, file_hash: str) -> BookResponse | None:
         book_id = self.hashes.get(file_hash)

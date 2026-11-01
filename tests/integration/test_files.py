@@ -20,9 +20,10 @@ def store_book(
     course_code: str = "CSC201",
 ) -> tuple[BookResponse, Path]:
     """Create a book row with a real PDF on disk and return both."""
-    file_path = storage_directory / f"{uuid.uuid4().hex}.pdf"
+    file_name = f"{uuid.uuid4().hex}.pdf"
+    file_path = storage_directory / file_name
     file_path.write_bytes(content)
-    book = make_book(name=name, course_code=course_code, file_path=str(file_path))
+    book = make_book(name=name, course_code=course_code, file_path=file_name)
     return book, file_path
 
 

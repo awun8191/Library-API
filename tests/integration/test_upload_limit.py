@@ -14,7 +14,7 @@ MEGABYTE = 1024 * 1024
 
 def set_upload_limit(monkeypatch: pytest.MonkeyPatch, megabytes: str) -> None:
     """Change the limit and drop the cached settings."""
-    monkeypatch.setenv("MAX_UPLOAD_MB", megabytes)
+    monkeypatch.setenv("MAX_UPLOAD_SIZE_MB", megabytes)
     get_settings.cache_clear()
 
 

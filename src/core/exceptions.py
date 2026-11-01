@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -44,16 +45,16 @@ class FileNotFoundException(AppException):
     code: str = "FILE_NOT_FOUND"
 
 
+class FileTooLargeException(AppException):
+    message: str = "File is too large"
+    status_code: int = 413
+    code: str = "FILE_TOO_LARGE"
+
+
 class DuplicateFileException(AppException):
     message: str = "Duplicate file: this document has already been uploaded"
     status_code: int = 409
     code: str = "DUPLICATE_FILE"
-
-
-class FileTooLargeException(AppException):
-    message: str = "File too large: the upload limit is exceeded"
-    status_code: int = 413
-    code: str = "FILE_TOO_LARGE"
 
 
 # ------------------------   USER EXCEPTIONS -----------------------------------------
@@ -116,9 +117,6 @@ class DepartmentNotFoundException(AppException):
     code: str = "DEPARTMENT_NOT_FOUND"
 
 
-# ------------------------   RATE LIMIT EXCEPTIONS -----------------------------------
-
-
 class RateLimitedException(AppException):
     message: str = "Too many requests. Try again later."
     status_code: int = 429
@@ -133,6 +131,16 @@ def register_exception_handler(app: FastAPI):
             status_code=exc.status_code,
             content={"message": exc.message, "code": exc.code},
             headers=exc.headers,
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def handle_http_exception(request: Request, exc: StarletteHTTPException):
+        """Give framework errors (unknown route, wrong method) the same shape."""
+        codes = {404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"message": str(exc.detail), "code": codes.get(exc.status_code, "HTTP_ERROR")},
+            headers=getattr(exc, "headers", None),
         )
 
     @app.exception_handler(RequestValidationError)

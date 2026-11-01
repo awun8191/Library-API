@@ -24,7 +24,7 @@ def get_departments_router(settings: AppSettings) -> APIRouter:
             200: {"description": "List of departments fetched successfully"},
         },
     )
-    async def list_departments(
+    def list_departments(
         db: Session = Depends(get_db),
     ):
         """List all departments available for filtering and categorizing course materials."""

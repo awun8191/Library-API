@@ -21,7 +21,7 @@ The problem statement is deliberately short. The value is in a clear contract, a
 
 | Feature | Detail |
 |---|---|
-| Admin upload | Multipart form. PDF signature check. SHA-256 hash with a `UNIQUE` constraint |
+| Admin upload | Multipart form, read in chunks up to `MAX_UPLOAD_SIZE_MB`. PDF signature check. SHA-256 hash with a `UNIQUE` constraint |
 | Duplicate guard | A second upload of the same bytes returns `409` with the book that holds the file |
 | Search | Literal match on the book name. `%` and `_` are not wildcards |
 | Filters | Department id and course code, combined with the search |
@@ -97,7 +97,7 @@ The seed script prints the development logins:
 | Admin | `admin@school.edu` | `dev-password-123` | `admin` |
 | Student | `student@school.edu` | `dev-password-123` | `user` |
 
-Both accounts use an Argon2 hash. The script is safe to run more than once, and it reuses an existing row instead of a duplicate.
+Both accounts use an Argon2 hash. The script runs only when `ENVIRONMENT` is `development`, and it reuses an existing row instead of a duplicate.
 
 ## API summary
 
@@ -243,7 +243,7 @@ src/
 ├── dependencies.py         # Service wiring and the current user
 ├── integrations/
 │   ├── database.py         # Engine, session factory, session dependency
-│   ├── file_storage.py     # Local PDF storage
+│   ├── file_storage.py     # Local PDF storage. The database keeps the file name only
 │   ├── rate_limit.py       # PostgreSQL and memory counter stores
 │   └── security.py         # Argon2 hasher and JWT issuer
 ├── middleware/
@@ -329,7 +329,7 @@ Vercel limits that shape the design:
 
 | Limit | Effect on this project |
 |---|---|
-| 4.5 MB request body | The application refuses an upload over 4 MB first, so the user gets a clear `413` instead of a platform error |
+| 4.5 MB request body | Set `MAX_UPLOAD_SIZE_MB=4`, so the API answers `413` before the platform rejects the request |
 | No persistent disk | A file written to `STORAGE_DIR` does not survive a redeploy or a cold start. A production file store is a later change |
 | Runtime Python may be below 3.14 | The runtime that Vercel selects can be older than the local version. Check the version in the Vercel project settings before the first deploy |
 
@@ -344,6 +344,7 @@ Environment variables for the production project:
 | `ENVIRONMENT` | `production`. This also turns off `/docs`, `/redoc`, and `/openapi.json` |
 | `CORS_ALLOW_ORIGINS` | The real frontend origins, comma separated. Never `*` |
 | `TRUST_PROXY_HEADERS` | `true`, because Vercel sits in front of the function |
+| `MAX_UPLOAD_SIZE_MB` | `4`, below the Vercel body limit |
 | `STORAGE_DIR` | A writable path, if the platform offers one |
 | `RATE_LIMIT_BACKEND` | `postgres`, so the limits survive a restart |
 
@@ -353,7 +354,7 @@ Environment variables for the production project:
 |---|---|
 | No refresh tokens | The access token is the only token. A client logs in again after it expires |
 | No admin management endpoint | The seed script creates the admin. A promotion needs a database change |
-| PDFs up to 4 MB | `MAX_UPLOAD_MB` defaults to 4, below the 4.5 MB Vercel body limit |
+| Upload cap | `MAX_UPLOAD_SIZE_MB` defaults to 20, and the handler stops reading past it. Set 4 on Vercel, below the 4.5 MB body limit |
 | One uploaded file per book | A new edition means a new book row. The book holds one `file_path` |
 | No email verification | A signup is active at once, and any address is accepted |
 | No malware scan | The API checks the `%PDF-` signature only. It does not inspect the content |
@@ -383,8 +384,10 @@ The full history is in the [changelog](./CHANGELOG.md).
 | 7 | `file_url` | Derived from the book id in the response. One stored location, `file_path` |
 | 8 | Rate limiting in PostgreSQL | A fixed window with one atomic upsert per hit. A restart and a second worker keep the same counts. The memory store stays for tests |
 | 9 | Request ids and JSON logs | Every request gets an id, and production writes one JSON object per line with that id. A user report and a log line meet without a search |
-| 10 | The 4 MB cap | `MAX_UPLOAD_MB` sits below the 4.5 MB Vercel body limit, so the API answers `413` before the platform rejects the request |
+| 10 | The upload cap | `MAX_UPLOAD_SIZE_MB` defaults to 20. Vercel sets 4, below the 4.5 MB body limit, so the API answers `413` before the platform rejects the request |
 | 11 | Health route | `GET /health` runs `SELECT 1` and reports the database. The deploy smoke test and the monitor use it, so a broken database fails a deploy instead of a user |
+| 12 | Stored file names | `books.file_path` holds the file name only. The storage folder is joined at read time, so the folder can move without a data change |
+| 13 | Sync routes | A route that uses the synchronous database session is a plain `def`, so FastAPI runs it in its thread pool and the event loop stays free |
 
 ## Contributing and License
 

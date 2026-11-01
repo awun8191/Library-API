@@ -21,6 +21,7 @@ class AppSettings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, ge=1)
     cors_allow_origins: str = "*"
+    max_upload_size_mb: int = Field(default=20, ge=1)
     storage_dir: str = "Storage"
     rate_limit_enabled: bool = True
     rate_limit_backend: Literal["postgres", "memory"] = "postgres"
@@ -29,9 +30,13 @@ class AppSettings(BaseSettings):
     rate_limit_signup_per_hour: int = 5
     rate_limit_upload_per_hour: int = 30
     trust_proxy_headers: bool = False
-    max_upload_mb: int = Field(default=4, ge=1)
     log_level: str = "INFO"
     log_json: bool = False
+
+    @property
+    def max_upload_size_bytes(self) -> int:
+        """Return the upload limit in bytes."""
+        return self.max_upload_size_mb * 1024 * 1024
 
     @property
     def cors_origin_list(self) -> list[str]:
