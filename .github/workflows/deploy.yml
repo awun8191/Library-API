@@ -1,0 +1,99 @@
+# Deploy the API to production and smoke test the result.
+#
+# Required repository secrets:
+#   PRODUCTION_DATABASE_URL  - connection string for the production database
+#   VERCEL_TOKEN             - Vercel access token
+#   VERCEL_ORG_ID            - Vercel team or user identifier
+#   VERCEL_PROJECT_ID        - Vercel project identifier
+# Required repository variables:
+#   PRODUCTION_URL           - public base URL of the deployment
+#   DEPLOY_ENABLED           - "true" turns the deployment on
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.13.1
+          enable-cache: true
+
+      - name: Install the dependencies
+        run: uv sync --frozen
+
+      - name: Apply the migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: uv run alembic upgrade head
+
+  deploy:
+    name: Deploy
+    needs: migrate
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Pull the Vercel project settings
+        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build the project
+        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy the build
+        run: npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  smoke:
+    name: Smoke
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check the health route
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          body=$(curl -fsS "$PRODUCTION_URL/health")
+          echo "$body"
+          if [[ "$body" != *ok* ]]; then
+            echo "The health body does not contain ok."
+            exit 1
+          fi
+
+      - name: Check the public book list
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/api/v1/books")
+          echo "Status: $code"
+          if [ "$code" != "200" ]; then
+            echo "The public book list did not answer 200."
+            exit 1
+          fi

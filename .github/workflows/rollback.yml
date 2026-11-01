@@ -1,0 +1,45 @@
+# Roll production back to the previous Vercel deployment.
+#
+# Required repository secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+# Required repository variables: PRODUCTION_URL.
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Set this to true to roll production back.
+        type: boolean
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Rollback
+    if: ${{ inputs.confirm == true || inputs.confirm == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Roll back the last deployment
+        run: npx vercel@latest rollback --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Check the health route
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          body=$(curl -fsS "$PRODUCTION_URL/health")
+          echo "$body"
+          if [[ "$body" != *ok* ]]; then
+            echo "The health body does not contain ok."
+            exit 1
+          fi
